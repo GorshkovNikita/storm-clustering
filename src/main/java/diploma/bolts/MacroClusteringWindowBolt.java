@@ -1,5 +1,7 @@
 package diploma.bolts;
 
+
+import diploma.clustering.tfidf.Clustering;
 import org.apache.storm.task.OutputCollector;
 import org.apache.storm.task.TopologyContext;
 import org.apache.storm.topology.OutputFieldsDeclarer;
@@ -8,18 +10,19 @@ import org.apache.storm.tuple.Tuple;
 import org.apache.storm.windowing.TupleWindow;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import twitter4j.Status;
 
-import java.util.List;
 import java.util.Map;
 
 /**
+ * Обработчик, работающий как окно, собирающий все микрокластера всех
+ * обработчиков {@link diploma.bolts.MicroClusteringBolt} и создающий новые глобальные кластера
+ * По идее должен обновлять данные в in-memory data grid (hazelcast, например)
  * @author Никита
  */
-public class WindowBolt extends BaseWindowedBolt {
-    private static final Logger LOG = LoggerFactory.getLogger(WindowBolt.class);
+public class MacroClusteringWindowBolt extends BaseWindowedBolt {
+    private static final Logger LOG = LoggerFactory.getLogger(MacroClusteringWindowBolt.class);
     private OutputCollector collector;
-    private int count = 0;
+
     @Override
     public void prepare(Map stormConf, TopologyContext context, OutputCollector collector) {
         this.collector = collector;
@@ -27,16 +30,13 @@ public class WindowBolt extends BaseWindowedBolt {
 
     @Override
     public void execute(TupleWindow inputWindow) {
-        count++;
-        LOG.info("in window " + count + " tuples count = " + inputWindow.get().size());
         for (Tuple tuple : inputWindow.get()) {
-            List<Status> statuses = (List<Status>) tuple.getValue(0);
-            LOG.info(Integer.toString(statuses.size()) + " from " + count);
+            Clustering clustering = (Clustering) tuple.getValue(0);
+            LOG.info(Integer.toString(clustering.getClusters().size()));
         }
     }
 
     @Override
     public void declareOutputFields(OutputFieldsDeclarer declarer) {
-        //declarer.declare(new Fields("ngram", "count"));
     }
 }

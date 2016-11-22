@@ -1,7 +1,7 @@
 package diploma;
 
-import diploma.bolts.PrinterBolt;
-import diploma.bolts.WindowBolt;
+import diploma.bolts.MicroClusteringBolt;
+import diploma.bolts.MacroClusteringWindowBolt;
 import diploma.spouts.creators.SpoutCreator;
 import org.apache.storm.Config;
 import org.apache.storm.LocalCluster;
@@ -39,8 +39,8 @@ public class Topology {
         TopologyBuilder topologyBuilder = new TopologyBuilder();
         IRichSpout spout = spoutCreator.createSpout();
         topologyBuilder.setSpout("spout", spout, numWorkers);
-        topologyBuilder.setBolt("printerBolt", new PrinterBolt(), numWorkers).shuffleGrouping("spout");
-        topologyBuilder.setBolt("windowBolt", new WindowBolt()
+        topologyBuilder.setBolt("printerBolt", new MicroClusteringBolt(), numWorkers).shuffleGrouping("spout");
+        topologyBuilder.setBolt("windowBolt", new MacroClusteringWindowBolt()
                 .withWindow(
                         // размер окна чуть-чуть больше, чем настройка TOPOLOGY_TICK_TUPLE_FREQ_SECS для болта,
                         // чтобы все микрокластера поппадали в него

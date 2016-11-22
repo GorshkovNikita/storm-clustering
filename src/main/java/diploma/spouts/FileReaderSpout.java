@@ -42,7 +42,7 @@ public class FileReaderSpout extends BaseRichSpout {
             do {
                 line = reader.readLine();
                 collector.emit(new Values(line, ++msgId), msgId);
-                Thread.sleep(1000);
+                Thread.sleep(100);
             } while (line != null);
         } catch (IOException e) {
             LOG.error(e.getMessage());
