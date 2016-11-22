@@ -1,0 +1,6 @@
+.idea/
+src/main/resources/cluster-settings.properties
+*.iml
+*.iws
+log/
+target/
