@@ -1,6 +1,7 @@
 package diploma.bolts;
 
-import diploma.clustering.tfidf.Clustering;
+import diploma.clustering.clusters.StatusesClustering;
+import diploma.clustering.dbscan.points.DbscanStatusesCluster;
 import org.apache.storm.Config;
 import org.apache.storm.Constants;
 import org.apache.storm.topology.BasicOutputCollector;
@@ -15,9 +16,9 @@ import twitter4j.Status;
 import twitter4j.TwitterException;
 import twitter4j.TwitterObjectFactory;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * Обработчик, создающий микрокластера из сообщений, поступающих конкретно ему
@@ -26,12 +27,24 @@ import java.util.Map;
  */
 public class MicroClusteringBolt extends BaseBasicBolt {
     private static final Logger LOG = LoggerFactory.getLogger(MicroClusteringBolt.class);
-    Clustering clustering = new Clustering();
+    private StatusesClustering clustering = new StatusesClustering();
+    private static final int MIN_POINTS = 25;
 
     @Override
     public void execute(Tuple tuple, BasicOutputCollector collector) {
         if (isTickTuple(tuple)) {
-            collector.emit(new Values(clustering));
+            List<DbscanStatusesCluster> bigClusters = clustering.getClusters()
+                    .stream()
+                    .filter((cluster) -> cluster.getAssignedPoints().size() > MIN_POINTS)
+                            // Если дополнительно для фильтра использовать: && !cluster.isVisited()), то
+                            // тогда нельзя будет найти всех соседей
+                    .collect(Collectors.toList());
+//            clustersDbscan.run(bigClusters);
+            for (DbscanStatusesCluster cluster: bigClusters) {
+                cluster.getTfIdf().sortTermFrequencyMap();
+                collector.emit(new Values(cluster));
+                clustering.getClusters().remove(cluster);
+            }
         }
         else {
             // для KafkaSpout field name = str
@@ -51,7 +64,7 @@ public class MicroClusteringBolt extends BaseBasicBolt {
     @Override
     public Map<String, Object> getComponentConfiguration() {
         Config conf = new Config();
-        conf.put(Config.TOPOLOGY_TICK_TUPLE_FREQ_SECS, 10);
+        conf.put(Config.TOPOLOGY_TICK_TUPLE_FREQ_SECS, 30);
         return conf;
     }
 
@@ -62,6 +75,6 @@ public class MicroClusteringBolt extends BaseBasicBolt {
 
     @Override
     public void declareOutputFields(OutputFieldsDeclarer ofd) {
-        ofd.declare(new Fields("statuses"));
+        ofd.declare(new Fields("microClusters"));
     }
 }

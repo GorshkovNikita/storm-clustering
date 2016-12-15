@@ -39,26 +39,27 @@ public class Topology {
         TopologyBuilder topologyBuilder = new TopologyBuilder();
         IRichSpout spout = spoutCreator.createSpout();
         topologyBuilder.setSpout("spout", spout, numWorkers);
-        topologyBuilder.setBolt("printerBolt", new MicroClusteringBolt(), numWorkers).shuffleGrouping("spout");
-        topologyBuilder.setBolt("windowBolt", new MacroClusteringWindowBolt()
+        topologyBuilder.setBolt("microClusteringBolt", new MicroClusteringBolt(), numWorkers).shuffleGrouping("spout");
+        topologyBuilder.setBolt("macroClusteringBolt", new MacroClusteringWindowBolt()
                 .withWindow(
                         // размер окна чуть-чуть больше, чем настройка TOPOLOGY_TICK_TUPLE_FREQ_SECS для болта,
                         // чтобы все микрокластера поппадали в него
-                        new BaseWindowedBolt.Duration(11, TimeUnit.SECONDS),
-                        new BaseWindowedBolt.Duration(11, TimeUnit.SECONDS))
+                        new BaseWindowedBolt.Duration(31, TimeUnit.SECONDS),
+                        new BaseWindowedBolt.Duration(31, TimeUnit.SECONDS))
                 // parallelism hint ставим равным 1, чтобы все микрокластера обрабатывались в одном месте
-                , 1).shuffleGrouping("printerBolt");
+                , 1).shuffleGrouping("microClusteringBolt");
 
         Config conf = new Config();
         conf.setDebug(false);
         conf.setMaxSpoutPending(4000);
         conf.setNumWorkers(numWorkers);
+        conf.setMessageTimeoutSecs(80);
         StormTopology topology = topologyBuilder.createTopology();
 
         if (startupType == StartupType.LOCAL) {
             LocalCluster cluster = new LocalCluster();
             cluster.submitTopology("clustering", conf, topology);
-            Utils.sleep(60000);
+            Utils.sleep(1200000);
             cluster.killTopology("clustering");
             cluster.shutdown();
         }
