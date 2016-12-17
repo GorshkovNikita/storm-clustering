@@ -36,10 +36,7 @@ public class MicroClusteringBolt extends BaseBasicBolt {
             List<DbscanStatusesCluster> bigClusters = clustering.getClusters()
                     .stream()
                     .filter((cluster) -> cluster.getAssignedPoints().size() > MIN_POINTS)
-                            // Если дополнительно для фильтра использовать: && !cluster.isVisited()), то
-                            // тогда нельзя будет найти всех соседей
                     .collect(Collectors.toList());
-//            clustersDbscan.run(bigClusters);
             for (DbscanStatusesCluster cluster: bigClusters) {
                 cluster.getTfIdf().sortTermFrequencyMap();
                 collector.emit(new Values(cluster));
@@ -48,15 +45,17 @@ public class MicroClusteringBolt extends BaseBasicBolt {
         }
         else {
             // для KafkaSpout field name = str
-            String line = tuple.getStringByField("line");
+            String tweetJson = tuple.getStringByField("str");
             Integer msgId = tuple.getIntegerByField("msgId");
-            try {
-                Status status = TwitterObjectFactory.createStatus(line);
-                clustering.processNext(status);
-                LOG.info("msgId = " + msgId);
-            } catch (TwitterException e) {
-                LOG.error(e.getMessage());
-                e.printStackTrace();
+            if (tweetJson != null) {
+                try {
+                    Status status = TwitterObjectFactory.createStatus(tweetJson);
+                    clustering.processNext(status);
+                    LOG.info("msgId = " + msgId);
+                } catch (TwitterException e) {
+                    LOG.error(e.getMessage());
+                    e.printStackTrace();
+                }
             }
         }
     }

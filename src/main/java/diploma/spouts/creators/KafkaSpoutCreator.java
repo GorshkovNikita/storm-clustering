@@ -1,6 +1,6 @@
 package diploma.spouts.creators;
 
-import diploma.ClusterConfig;
+import diploma.config.ClusterConfig;
 import org.apache.storm.kafka.*;
 import org.apache.storm.spout.SchemeAsMultiScheme;
 import org.apache.storm.topology.IRichSpout;

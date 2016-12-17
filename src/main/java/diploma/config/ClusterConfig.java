@@ -1,4 +1,4 @@
-package diploma;
+package diploma.config;
 
 import java.io.InputStream;
 import java.util.Properties;

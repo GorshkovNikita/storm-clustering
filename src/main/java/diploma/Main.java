@@ -3,6 +3,7 @@ package diploma;
 import diploma.spouts.creators.FileReaderSpoutCreator;
 import diploma.spouts.creators.KafkaSpoutCreator;
 import diploma.spouts.creators.SpoutCreator;
+import diploma.spouts.creators.TwitterStreamingApiSpoutCreator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -27,11 +28,12 @@ public class Main {
         switch (startupType) {
             case LOCAL:
                 if (args.length < 2) {
-                    LOG.error("You must enter a file path: local or cluster");
-                    return;
+                    spoutCreator = new TwitterStreamingApiSpoutCreator();
                 }
-                Path filePath = Paths.get(args[1]);
-                spoutCreator = new FileReaderSpoutCreator(filePath);
+                else {
+                    Path filePath = Paths.get(args[1]);
+                    spoutCreator = new FileReaderSpoutCreator(filePath);
+                }
                 break;
             case CLUSTER:
                 spoutCreator = new KafkaSpoutCreator();

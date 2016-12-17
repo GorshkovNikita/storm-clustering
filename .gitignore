@@ -1,5 +1,6 @@
 .idea/
 src/main/resources/cluster-settings.properties
+src/main/resources/twitter-config.properties
 *.iml
 *.iws
 log/
