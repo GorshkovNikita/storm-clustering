@@ -1,9 +1,11 @@
 package diploma.bolts;
 
+import diploma.dao.TweetDao;
 import diploma.clustering.clusters.StatusesClustering;
 import diploma.clustering.dbscan.points.DbscanStatusesCluster;
 import org.apache.storm.Config;
 import org.apache.storm.Constants;
+import org.apache.storm.task.TopologyContext;
 import org.apache.storm.topology.BasicOutputCollector;
 import org.apache.storm.topology.OutputFieldsDeclarer;
 import org.apache.storm.topology.base.BaseBasicBolt;
@@ -27,8 +29,16 @@ import java.util.stream.Collectors;
  */
 public class MicroClusteringBolt extends BaseBasicBolt {
     private static final Logger LOG = LoggerFactory.getLogger(MicroClusteringBolt.class);
-    private StatusesClustering clustering = new StatusesClustering();
-    private static final int MIN_POINTS = 25;
+    private StatusesClustering clustering;
+    private static final int MIN_POINTS = 30;
+    private TweetDao tweetDao;
+
+    @Override
+    public void prepare(Map stormConf, TopologyContext context) {
+        super.prepare(stormConf, context);
+        clustering = new StatusesClustering();
+        tweetDao = new TweetDao();
+    }
 
     @Override
     public void execute(Tuple tuple, BasicOutputCollector collector) {
@@ -39,6 +49,7 @@ public class MicroClusteringBolt extends BaseBasicBolt {
                     .collect(Collectors.toList());
             for (DbscanStatusesCluster cluster: bigClusters) {
                 cluster.getTfIdf().sortTermFrequencyMap();
+                cluster.getAssignedPoints().clear();
                 collector.emit(new Values(cluster));
                 clustering.getClusters().remove(cluster);
             }
@@ -51,6 +62,7 @@ public class MicroClusteringBolt extends BaseBasicBolt {
                 try {
                     Status status = TwitterObjectFactory.createStatus(tweetJson);
                     clustering.processNext(status);
+                    tweetDao.saveTweet(status);
                     LOG.info("msgId = " + msgId);
                 } catch (TwitterException e) {
                     LOG.error(e.getMessage());

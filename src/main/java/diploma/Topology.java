@@ -2,6 +2,7 @@ package diploma;
 
 import diploma.bolts.MicroClusteringBolt;
 import diploma.bolts.MacroClusteringWindowBolt;
+import diploma.bolts.StatisticsBolt;
 import diploma.spouts.creators.SpoutCreator;
 import org.apache.storm.Config;
 import org.apache.storm.LocalCluster;
@@ -48,6 +49,7 @@ public class Topology {
                         new BaseWindowedBolt.Duration(31, TimeUnit.SECONDS))
                 // parallelism hint ставим равным 1, чтобы все микрокластера обрабатывались в одном месте
                 , 1).shuffleGrouping("microClusteringBolt");
+        topologyBuilder.setBolt("statisticsBolt", new StatisticsBolt(), 1).shuffleGrouping("macroClusteringBolt");
 
         Config conf = new Config();
         conf.setDebug(false);

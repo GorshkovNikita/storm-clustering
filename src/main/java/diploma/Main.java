@@ -42,7 +42,7 @@ public class Main {
                 LOG.error("Wrong startup type. It must be local or cluster");
                 return;
         }
-        Topology topology = new Topology(4, startupType, spoutCreator);
+        Topology topology = new Topology(1, startupType, spoutCreator);
         try {
             topology.submit();
         } catch (Exception ex) {

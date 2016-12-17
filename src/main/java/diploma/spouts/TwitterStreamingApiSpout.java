@@ -28,6 +28,7 @@ public class TwitterStreamingApiSpout extends BaseRichSpout {
     @Override
     public void open(Map conf, TopologyContext context, SpoutOutputCollector collector) {
         this.collector = collector;
+        // TEMP
         try {
             TwitterStreamConnection.getInstance(TwitterConfig.CONSUMER_KEY, TwitterConfig.CONSUMER_SECRET, TwitterConfig.TOKEN, TwitterConfig.TOKEN_SECRET).getClient().connect();
         }
