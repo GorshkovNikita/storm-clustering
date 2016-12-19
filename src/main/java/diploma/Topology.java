@@ -61,7 +61,7 @@ public class Topology {
         if (startupType == StartupType.LOCAL) {
             LocalCluster cluster = new LocalCluster();
             cluster.submitTopology("clustering", conf, topology);
-            Utils.sleep(1200000);
+            Utils.sleep(12000000);
             cluster.killTopology("clustering");
             cluster.shutdown();
         }

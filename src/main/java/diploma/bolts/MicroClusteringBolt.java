@@ -37,7 +37,7 @@ public class MicroClusteringBolt extends BaseBasicBolt {
     public void prepare(Map stormConf, TopologyContext context) {
         super.prepare(stormConf, context);
         clustering = new StatusesClustering();
-        tweetDao = new TweetDao();
+//        tweetDao = new TweetDao();
     }
 
     @Override
@@ -62,7 +62,7 @@ public class MicroClusteringBolt extends BaseBasicBolt {
                 try {
                     Status status = TwitterObjectFactory.createStatus(tweetJson);
                     clustering.processNext(status);
-                    tweetDao.saveTweet(status);
+//                    tweetDao.saveTweet(status);
                     LOG.info("msgId = " + msgId);
                 } catch (TwitterException e) {
                     LOG.error(e.getMessage());
