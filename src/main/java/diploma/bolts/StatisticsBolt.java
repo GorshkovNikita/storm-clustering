@@ -44,21 +44,25 @@ public class StatisticsBolt extends BaseBasicBolt {
     @Override
     public void declareOutputFields(OutputFieldsDeclarer ofd) {}
 
+    /**
+     * Получение статистики по кластеру (количество документов в нем, топ-10 ключевых слов)
+     * @param cluster - кластер
+     * @return статистика кластера
+     */
     private MacroClusteringStatistics getClusterStatistics(DbscanClustersCluster cluster) {
         MacroClusteringStatistics statistics = new MacroClusteringStatistics();
         int totalNumberOfDocuments = 0;
         Map<String, Integer> topTenTerms = new HashMap<>();
         for (DbscanStatusesCluster statusesCluster: cluster.getAssignedPoints()) {
             totalNumberOfDocuments += statusesCluster.getTfIdf().getDocumentNumber();
-            for (Map.Entry<String, Integer> entry: statusesCluster.getTfIdf().getTermFrequencyMap().entrySet()) {
+            for (Map.Entry<String, Integer> entry: statusesCluster.getTfIdf().getTermFrequencyMap().entrySet())
                 topTenTerms.merge(entry.getKey(), entry.getValue(), (num1, num2) -> num1 + num2);
-            }
         }
         topTenTerms = MapUtil.putFirstEntries(10, MapUtil.sortByValue(topTenTerms));
-        statistics.setId(statisticsCounter);
+        statistics.setTimeFactor(statisticsCounter);
         statistics.setClusterId(cluster.getId());
         statistics.setNumberOfDocuments(totalNumberOfDocuments);
-        statistics.setTopTenTerms(topTenTerms);
+        statistics.setTopTerms(topTenTerms);
         return statistics;
     }
 }

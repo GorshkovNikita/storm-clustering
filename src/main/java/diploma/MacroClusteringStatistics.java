@@ -7,17 +7,17 @@ import java.util.Map;
  * @author Никита
  */
 public class MacroClusteringStatistics implements Serializable {
-    private int id;
+    private int timeFactor;
     private int clusterId;
-    private Map<String, Integer> topTenTerms;
+    private Map<String, Integer> topTerms;
     private int numberOfDocuments;
 
-    public int getId() {
-        return id;
+    public int getTimeFactor() {
+        return timeFactor;
     }
 
-    public void setId(int id) {
-        this.id = id;
+    public void setTimeFactor(int timeFactor) {
+        this.timeFactor = timeFactor;
     }
 
     public int getClusterId() {
@@ -36,11 +36,11 @@ public class MacroClusteringStatistics implements Serializable {
         this.numberOfDocuments = numberOfDocuments;
     }
 
-    public Map<String, Integer> getTopTenTerms() {
-        return topTenTerms;
+    public Map<String, Integer> getTopTerms() {
+        return topTerms;
     }
 
-    public void setTopTenTerms(Map<String, Integer> topTenTerms) {
-        this.topTenTerms = topTenTerms;
+    public void setTopTerms(Map<String, Integer> topTerms) {
+        this.topTerms = topTerms;
     }
 }
