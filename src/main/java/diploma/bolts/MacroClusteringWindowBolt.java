@@ -33,7 +33,7 @@ public class MacroClusteringWindowBolt extends BaseWindowedBolt {
     @Override
     public void prepare(Map stormConf, TopologyContext context, OutputCollector collector) {
         this.collector = collector;
-        clustersDbscan = new ClustersDbscan(3, 0.4);
+        clustersDbscan = new ClustersDbscan(3, 0.7);
     }
 
     @Override
@@ -41,10 +41,12 @@ public class MacroClusteringWindowBolt extends BaseWindowedBolt {
         List<DbscanPoint> incomingPoints = new ArrayList<>();
         for (Tuple tuple : inputWindow.get())
             incomingPoints.add((DbscanPoint) tuple.getValue(0));
+        long start = System.currentTimeMillis();
         clustersDbscan.run(incomingPoints);
+        LOG.info("Время выполнения dbscan на " + executeCounter + "-й итерации:" + ((double) System.currentTimeMillis() - (double) start) / 1000.0);
         // т.к окно вызывается каждые 30 секунд, то для сохранения статистики каждые 5 минут нужно каждые 10 раз вызывать emit
         if (++executeCounter % 10 == 0)
-            collector.emit(new Values(clustersDbscan.getClustering().getClusters()));
+            collector.emit(new Values(new ArrayList<>(clustersDbscan.getClustering().getClusters())));
     }
 
     @Override
