@@ -18,6 +18,7 @@ import twitter4j.Status;
 import twitter4j.TwitterException;
 import twitter4j.TwitterObjectFactory;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -31,6 +32,7 @@ public class MicroClusteringBolt extends BaseBasicBolt {
     private static final Logger LOG = LoggerFactory.getLogger(MicroClusteringBolt.class);
     private StatusesClustering clustering;
     private static final int MIN_POINTS = 30;
+    private static final int MAX_CLUSTERS = 100;
     private TweetDao tweetDao;
 
     @Override
@@ -43,16 +45,25 @@ public class MicroClusteringBolt extends BaseBasicBolt {
     @Override
     public void execute(Tuple tuple, BasicOutputCollector collector) {
         if (isTickTuple(tuple)) {
+            List<DbscanStatusesCluster> clustersForRemove = new ArrayList<>();
             List<DbscanStatusesCluster> bigClusters = clustering.getClusters()
                     .stream()
                     .filter((cluster) -> cluster.getAssignedPoints().size() > MIN_POINTS)
                     .collect(Collectors.toList());
-            for (DbscanStatusesCluster cluster: bigClusters) {
-                cluster.getTfIdf().sortTermFrequencyMap();
-                cluster.getAssignedPoints().clear();
-                collector.emit(new Values(cluster));
-                clustering.getClusters().remove(cluster);
+            int numberOfClusters = 0;
+            for (DbscanStatusesCluster cluster: clustering.getClusters()) {
+                if (numberOfClusters < 100 && bigClusters.contains(cluster)) {
+                    numberOfClusters++;
+                    cluster.getTfIdf().sortTermFrequencyMap();
+                    cluster.getAssignedPoints().clear();
+                    collector.emit(new Values(cluster));
+                    clustersForRemove.add(cluster);
+                }
+                else if (clustering.getTimestamp() - cluster.getLastUpdateTime() > 25000)
+                    clustersForRemove.add(cluster);
             }
+            for (DbscanStatusesCluster cluster: clustersForRemove)
+                clustering.getClusters().remove(cluster);
         }
         else {
             // для KafkaSpout field name = str

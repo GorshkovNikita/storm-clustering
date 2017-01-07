@@ -43,6 +43,7 @@ public class MacroClusteringWindowBolt extends BaseWindowedBolt {
             incomingPoints.add((DbscanPoint) tuple.getValue(0));
         long start = System.currentTimeMillis();
         clustersDbscan.run(incomingPoints);
+        LOG.info("Количество микрокластеров = " + incomingPoints.size());
         LOG.info("Время выполнения dbscan на " + executeCounter + "-й итерации:" + ((double) System.currentTimeMillis() - (double) start) / 1000.0);
         // т.к окно вызывается каждые 30 секунд, то для сохранения статистики каждые 5 минут нужно каждые 10 раз вызывать emit
         if (++executeCounter % 10 == 0)
