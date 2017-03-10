@@ -1,22 +1,23 @@
 package diploma;
 
 import java.io.Serializable;
+import java.sql.Timestamp;
 import java.util.Map;
 
 /**
  * @author Никита
  */
 public class MacroClusteringStatistics implements Serializable {
-    private int timeFactor;
+    private Timestamp timeFactor;
     private int clusterId;
     private Map<String, Integer> topTerms;
     private int numberOfDocuments;
 
-    public int getTimeFactor() {
+    public Timestamp getTimeFactor() {
         return timeFactor;
     }
 
-    public void setTimeFactor(int timeFactor) {
+    public void setTimeFactor(Timestamp timeFactor) {
         this.timeFactor = timeFactor;
     }
 

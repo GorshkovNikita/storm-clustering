@@ -14,6 +14,8 @@ import org.apache.storm.tuple.Tuple;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.sql.Timestamp;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -59,7 +61,7 @@ public class StatisticsBolt extends BaseBasicBolt {
                 topTenTerms.merge(entry.getKey(), entry.getValue(), (num1, num2) -> num1 + num2);
         }
         topTenTerms = MapUtil.putFirstEntries(10, MapUtil.sortByValue(topTenTerms));
-        statistics.setTimeFactor(statisticsCounter);
+        statistics.setTimeFactor(new Timestamp(new Date().getTime()));
         statistics.setClusterId(cluster.getId());
         statistics.setNumberOfDocuments(totalNumberOfDocuments);
         statistics.setTopTerms(topTenTerms);

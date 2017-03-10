@@ -1,6 +1,5 @@
 package diploma.bolts;
 
-import diploma.dao.TweetDao;
 import diploma.clustering.clusters.StatusesClustering;
 import diploma.clustering.dbscan.points.DbscanStatusesCluster;
 import org.apache.storm.Config;
@@ -28,42 +27,45 @@ import java.util.stream.Collectors;
  * TODO: сделать отдельный bolt для получения статуса
  * @author Никита
  */
-public class MicroClusteringBolt extends BaseBasicBolt {
-    private static final Logger LOG = LoggerFactory.getLogger(MicroClusteringBolt.class);
-    private StatusesClustering clustering;
+public class DenStreamMicroClusteringBolt extends BaseBasicBolt {
+    private static final Logger LOG = LoggerFactory.getLogger(DenStreamMicroClusteringBolt.class);
+    private StatusesClustering microClustering;
     private static final int MIN_POINTS = 30;
     private static final int MAX_CLUSTERS = 100;
-    private TweetDao tweetDao;
 
     @Override
     public void prepare(Map stormConf, TopologyContext context) {
         super.prepare(stormConf, context);
-        clustering = new StatusesClustering();
-//        tweetDao = new TweetDao();
+        microClustering = new StatusesClustering();
     }
 
     @Override
     public void execute(Tuple tuple, BasicOutputCollector collector) {
         if (isTickTuple(tuple)) {
             List<DbscanStatusesCluster> clustersForRemove = new ArrayList<>();
-            List<DbscanStatusesCluster> bigClusters = clustering.getClusters()
+            // По факту это выделение potential micro clusters, как в статье, только
+            // не учитывается вес кластера в зависимости от времени.
+            // Остальные кластера можно считать outlier micro clusters
+            List<DbscanStatusesCluster> bigClusters = microClustering.getClusters()
                     .stream()
                     .filter((cluster) -> cluster.getAssignedPoints().size() > MIN_POINTS)
                     .collect(Collectors.toList());
             int numberOfClusters = 0;
-            for (DbscanStatusesCluster cluster: clustering.getClusters()) {
-                if (numberOfClusters < 100 && bigClusters.contains(cluster)) {
+            for (DbscanStatusesCluster cluster: microClustering.getClusters()) {
+                // все potential micro clusters не отправляются дальше в целях оптимизации
+                if (numberOfClusters < MAX_CLUSTERS && bigClusters.contains(cluster)) {
                     numberOfClusters++;
                     cluster.getTfIdf().sortTermFrequencyMap();
                     cluster.getAssignedPoints().clear();
                     collector.emit(new Values(cluster));
                     clustersForRemove.add(cluster);
                 }
-                else if (clustering.getTimestamp() - cluster.getLastUpdateTime() > 25000)
+                // удаляются старые микрокластера
+                else if (microClustering.getTimestamp() - cluster.getLastUpdateTime() > 25000)
                     clustersForRemove.add(cluster);
             }
             for (DbscanStatusesCluster cluster: clustersForRemove)
-                clustering.getClusters().remove(cluster);
+                microClustering.getClusters().remove(cluster);
         }
         else {
             // для KafkaSpout field name = str
@@ -72,7 +74,7 @@ public class MicroClusteringBolt extends BaseBasicBolt {
             if (tweetJson != null) {
                 try {
                     Status status = TwitterObjectFactory.createStatus(tweetJson);
-                    clustering.processNext(status);
+                    microClustering.processNext(status);
                 } catch (TwitterException ignored) {}
             }
         }

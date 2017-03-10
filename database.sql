@@ -28,9 +28,9 @@ CREATE TABLE `statistics` (
   `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `clusterId` int(10) unsigned NOT NULL,
   `numberOfDocuments` int(10) unsigned NOT NULL,
-  `timeFactor` int(10) unsigned NOT NULL,
+  `timestamp` timestamp NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=805 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=169114 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -80,7 +80,7 @@ CREATE TABLE `tweets` (
   `tweetText` varchar(255) DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `tweetId_UNIQUE` (`tweetId`)
-) ENGINE=InnoDB AUTO_INCREMENT=301117 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -101,4 +101,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2016-12-20 12:52:16
+-- Dump completed on 2017-03-10 19:22:06

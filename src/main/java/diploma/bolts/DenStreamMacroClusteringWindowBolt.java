@@ -20,12 +20,12 @@ import java.util.Map;
 
 /**
  * Обработчик, работающий как окно, собирающий все микрокластера всех
- * обработчиков {@link diploma.bolts.MicroClusteringBolt} и создающий новые глобальные кластера
+ * обработчиков {@link DenStreamMicroClusteringBolt} и создающий новые глобальные кластера
  * По идее должен обновлять данные в in-memory data grid (hazelcast, например)
  * @author Никита
  */
-public class MacroClusteringWindowBolt extends BaseWindowedBolt {
-    private static final Logger LOG = LoggerFactory.getLogger(MacroClusteringWindowBolt.class);
+public class DenStreamMacroClusteringWindowBolt extends BaseWindowedBolt {
+    private static final Logger LOG = LoggerFactory.getLogger(DenStreamMacroClusteringWindowBolt.class);
     private OutputCollector collector;
     private ClustersDbscan clustersDbscan;
     private static int executeCounter = 0;
@@ -46,7 +46,7 @@ public class MacroClusteringWindowBolt extends BaseWindowedBolt {
         LOG.info("Количество микрокластеров = " + incomingPoints.size());
         LOG.info("Время выполнения dbscan на " + executeCounter + "-й итерации:" + ((double) System.currentTimeMillis() - (double) start) / 1000.0);
         // т.к окно вызывается каждые 30 секунд, то для сохранения статистики каждые 5 минут нужно каждые 10 раз вызывать emit
-        if (++executeCounter % 10 == 0)
+        if (++executeCounter % 20 == 0)
             collector.emit(new Values(new ArrayList<>(clustersDbscan.getClustering().getClusters())));
     }
 
