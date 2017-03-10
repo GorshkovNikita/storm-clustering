@@ -73,12 +73,7 @@ public class MicroClusteringBolt extends BaseBasicBolt {
                 try {
                     Status status = TwitterObjectFactory.createStatus(tweetJson);
                     clustering.processNext(status);
-//                    tweetDao.saveTweet(status);
-//                    LOG.info("msgId = " + msgId);
-                } catch (TwitterException e) {
-//                    LOG.error(e.getMessage());
-//                    e.printStackTrace();
-                }
+                } catch (TwitterException ignored) {}
             }
         }
     }

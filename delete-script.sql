@@ -1,0 +1,3 @@
+SET SQL_SAFE_UPDATES = 0;
+DELETE FROM clustering.statistics;
+SET SQL_SAFE_UPDATES = 1;
