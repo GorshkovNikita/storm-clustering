@@ -1,9 +1,7 @@
 package diploma;
 
-import diploma.spouts.creators.FileReaderSpoutCreator;
-import diploma.spouts.creators.KafkaSpoutCreator;
-import diploma.spouts.creators.SpoutCreator;
-import diploma.spouts.creators.TwitterStreamingApiSpoutCreator;
+import diploma.points.PointsTopology;
+import diploma.spouts.creators.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,9 +26,11 @@ public class Main {
         switch (startupType) {
             case LOCAL:
                 if (args.length < 2) {
-                    spoutCreator = new TwitterStreamingApiSpoutCreator();
+//                    spoutCreator = new TwitterStreamingApiSpoutCreator();
+                    spoutCreator = new PointsSpoutCreator();
                 }
                 else {
+                    // параметры: local D:\MSU\diploma\tweets-sets\full-random.txt
                     Path filePath = Paths.get(args[1]);
                     spoutCreator = new FileReaderSpoutCreator(filePath);
                 }
@@ -42,7 +42,8 @@ public class Main {
                 LOG.error("Wrong startup type. It must be local or cluster");
                 return;
         }
-        Topology topology = new Topology(1, startupType, spoutCreator);
+//        Topology topology = new Topology(1, startupType, spoutCreator);
+        PointsTopology topology = new PointsTopology(1, startupType, spoutCreator);
         try {
             topology.submit();
         } catch (Exception ex) {

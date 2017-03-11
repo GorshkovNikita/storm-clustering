@@ -1,6 +1,9 @@
-package diploma.bolts;
+package diploma.points;
 
+import diploma.clustering.clusters.PointsCluster;
+import diploma.clustering.clusters.PointsClustering;
 import diploma.clustering.clusters.StatusesClustering;
+import diploma.clustering.dbscan.points.DbscanSimplePoint;
 import diploma.clustering.dbscan.points.DbscanStatusesCluster;
 import org.apache.storm.Config;
 import org.apache.storm.Constants;
@@ -11,8 +14,6 @@ import org.apache.storm.topology.base.BaseBasicBolt;
 import org.apache.storm.tuple.Fields;
 import org.apache.storm.tuple.Tuple;
 import org.apache.storm.tuple.Values;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import twitter4j.Status;
 import twitter4j.TwitterException;
 import twitter4j.TwitterObjectFactory;
@@ -23,39 +24,37 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
- * Обработчик, создающий микрокластера из сообщений, поступающих конкретно ему
- * TODO: сделать отдельный bolt для получения статуса
  * @author Никита
  */
-public class DenStreamMicroClusteringBolt extends BaseBasicBolt {
-    private static final Logger LOG = LoggerFactory.getLogger(DenStreamMicroClusteringBolt.class);
-    private StatusesClustering microClustering;
+public class PointsMicroClusteringBolt extends BaseBasicBolt {
+    private PointsClustering microClustering;
     private static final int MIN_POINTS = 30;
     private static final int MAX_CLUSTERS = 100;
 
     @Override
     public void prepare(Map stormConf, TopologyContext context) {
         super.prepare(stormConf, context);
-        microClustering = new StatusesClustering(0.2);
+        microClustering = new PointsClustering(2500.0);
     }
 
     @Override
     public void execute(Tuple tuple, BasicOutputCollector collector) {
         if (isTickTuple(tuple)) {
-            List<DbscanStatusesCluster> clustersForRemove = new ArrayList<>();
+            List<PointsCluster> clustersForRemove = new ArrayList<>();
             // По факту это выделение potential micro clusters, как в статье, только
             // не учитывается вес кластера в зависимости от времени.
             // Остальные кластера можно считать outlier micro clusters
-            List<DbscanStatusesCluster> bigClusters = microClustering.getClusters()
+            List<PointsCluster> bigClusters = microClustering.getClusters()
                     .stream()
                     .filter((cluster) -> cluster.getAssignedPoints().size() > MIN_POINTS)
                     .collect(Collectors.toList());
             int numberOfClusters = 0;
-            for (DbscanStatusesCluster cluster: microClustering.getClusters()) {
+            for (PointsCluster cluster: microClustering.getClusters()) {
                 // все potential micro clusters не отправляются дальше в целях оптимизации
                 if (numberOfClusters < MAX_CLUSTERS && bigClusters.contains(cluster)) {
                     numberOfClusters++;
-                    cluster.getTfIdf().sortTermFrequencyMap();
+                    // считаем центр масс перед удалением точек
+                    cluster.getCenterOfMass();
                     cluster.getAssignedPoints().clear();
                     collector.emit(new Values(cluster));
                     clustersForRemove.add(cluster);
@@ -64,19 +63,13 @@ public class DenStreamMicroClusteringBolt extends BaseBasicBolt {
                 else if (microClustering.getTimestamp() - cluster.getLastUpdateTime() > 25000)
                     clustersForRemove.add(cluster);
             }
-            for (DbscanStatusesCluster cluster: clustersForRemove)
+            for (PointsCluster cluster: clustersForRemove)
                 microClustering.getClusters().remove(cluster);
         }
         else {
             // для KafkaSpout field name = str
-            String tweetJson = tuple.getStringByField("str");
-            Integer msgId = tuple.getIntegerByField("msgId");
-            if (tweetJson != null) {
-                try {
-                    Status status = TwitterObjectFactory.createStatus(tweetJson);
-                    microClustering.processNext(status);
-                } catch (TwitterException ignored) {}
-            }
+            DbscanSimplePoint point = (DbscanSimplePoint) tuple.getValueByField("str");
+            if (point != null) microClustering.processNext(point);
         }
     }
 
@@ -93,7 +86,7 @@ public class DenStreamMicroClusteringBolt extends BaseBasicBolt {
     }
 
     @Override
-    public void declareOutputFields(OutputFieldsDeclarer ofd) {
-        ofd.declare(new Fields("microClusters"));
+    public void declareOutputFields(OutputFieldsDeclarer declarer) {
+        declarer.declare(new Fields("microClusters"));
     }
 }
