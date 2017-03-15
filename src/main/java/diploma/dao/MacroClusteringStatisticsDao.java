@@ -13,13 +13,14 @@ public class MacroClusteringStatisticsDao extends BaseDao {
     public void saveStatistics(MacroClusteringStatistics statistics) {
         Connection connection = getConnection();
         PreparedStatement preparedStatement = null;
-        String insertTweet = "INSERT INTO statistics (timestamp, clusterId, numberOfDocuments) VALUES (?,?,?)";
+        String insertTweet = "INSERT INTO statistics (timestamp, clusterId, numberOfDocuments, absorbedClusters) VALUES (?,?,?,?)";
         if (connection != null) {
             try {
                 preparedStatement = connection.prepareStatement(insertTweet, Statement.RETURN_GENERATED_KEYS);
                 preparedStatement.setTimestamp(1, statistics.getTimeFactor());
                 preparedStatement.setInt(2, statistics.getClusterId());
                 preparedStatement.setInt(3, statistics.getNumberOfDocuments());
+                preparedStatement.setString(4, statistics.getAbsorbedClusterIds().toString());
 
                 int affectedRows = preparedStatement.executeUpdate();
                 if (affectedRows == 0)

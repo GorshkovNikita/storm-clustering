@@ -2,6 +2,7 @@ package diploma;
 
 import java.io.Serializable;
 import java.sql.Timestamp;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -12,6 +13,7 @@ public class MacroClusteringStatistics implements Serializable {
     private int clusterId;
     private Map<String, Integer> topTerms;
     private int numberOfDocuments;
+    private List<Integer> absorbedClusterIds;
 
     public Timestamp getTimeFactor() {
         return timeFactor;
@@ -43,5 +45,13 @@ public class MacroClusteringStatistics implements Serializable {
 
     public void setTopTerms(Map<String, Integer> topTerms) {
         this.topTerms = topTerms;
+    }
+
+    public List<Integer> getAbsorbedClusterIds() {
+        return absorbedClusterIds;
+    }
+
+    public void setAbsorbedClusterIds(List<Integer> absorbedClusterIds) {
+        this.absorbedClusterIds = absorbedClusterIds;
     }
 }

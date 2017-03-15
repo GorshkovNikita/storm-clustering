@@ -40,6 +40,7 @@ public class StatisticsBolt extends BaseBasicBolt {
         List<DbscanClustersCluster> macroClusters = (List<DbscanClustersCluster>) input.getValue(0);
         for (DbscanClustersCluster cluster: macroClusters)
             macroClusteringStatisticsDao.saveStatistics(getClusterStatistics(cluster));
+        // TODO: возможно очищать после сохранения статистики absorbedClusterIds
         statisticsCounter++;
     }
 
@@ -65,6 +66,7 @@ public class StatisticsBolt extends BaseBasicBolt {
         statistics.setClusterId(cluster.getId());
         statistics.setNumberOfDocuments(totalNumberOfDocuments);
         statistics.setTopTerms(topTenTerms);
+        statistics.setAbsorbedClusterIds(cluster.getAbsorbedClusterIds());
         return statistics;
     }
 }

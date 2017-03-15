@@ -2,6 +2,7 @@ package diploma.bolts;
 
 import diploma.clustering.clusters.StatusesClustering;
 import diploma.clustering.dbscan.points.DbscanStatusesCluster;
+import diploma.dao.TweetDao;
 import org.apache.storm.Config;
 import org.apache.storm.Constants;
 import org.apache.storm.task.TopologyContext;
@@ -32,11 +33,13 @@ public class DenStreamMicroClusteringBolt extends BaseBasicBolt {
     private StatusesClustering microClustering;
     private static final int MIN_POINTS = 30;
     private static final int MAX_CLUSTERS = 100;
+    private TweetDao tweetDao;
 
     @Override
     public void prepare(Map stormConf, TopologyContext context) {
         super.prepare(stormConf, context);
         microClustering = new StatusesClustering(0.2);
+        tweetDao = new TweetDao();
     }
 
     @Override
@@ -56,6 +59,9 @@ public class DenStreamMicroClusteringBolt extends BaseBasicBolt {
                 if (numberOfClusters < MAX_CLUSTERS && bigClusters.contains(cluster)) {
                     numberOfClusters++;
                     cluster.getTfIdf().sortTermFrequencyMap();
+                    for (Status status : cluster.getAssignedPoints()) {
+                        tweetDao.updateTweetClusteredTime(status);
+                    }
                     cluster.getAssignedPoints().clear();
                     collector.emit(new Values(cluster));
                     clustersForRemove.add(cluster);
@@ -74,6 +80,7 @@ public class DenStreamMicroClusteringBolt extends BaseBasicBolt {
             if (tweetJson != null) {
                 try {
                     Status status = TwitterObjectFactory.createStatus(tweetJson);
+                    tweetDao.saveTweet(status);
                     microClustering.processNext(status);
                 } catch (TwitterException ignored) {}
             }

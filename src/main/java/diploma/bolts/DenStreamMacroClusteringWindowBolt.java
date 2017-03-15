@@ -1,8 +1,12 @@
 package diploma.bolts;
 
 
+import diploma.clustering.clusters.ClustersCluster;
+import diploma.clustering.clusters.StatusesCluster;
 import diploma.clustering.dbscan.ClustersDbscan;
 import diploma.clustering.dbscan.points.DbscanPoint;
+import diploma.clustering.dbscan.points.DbscanStatusesCluster;
+import diploma.dao.TweetDao;
 import org.apache.storm.task.OutputCollector;
 import org.apache.storm.task.TopologyContext;
 import org.apache.storm.topology.OutputFieldsDeclarer;
@@ -28,7 +32,7 @@ public class DenStreamMacroClusteringWindowBolt extends BaseWindowedBolt {
     private static final Logger LOG = LoggerFactory.getLogger(DenStreamMacroClusteringWindowBolt.class);
     private OutputCollector collector;
     private ClustersDbscan clustersDbscan;
-    private static int executeCounter = 0;
+    private static long executeCounter = 0;
 
     @Override
     public void prepare(Map stormConf, TopologyContext context, OutputCollector collector) {
@@ -39,8 +43,23 @@ public class DenStreamMacroClusteringWindowBolt extends BaseWindowedBolt {
     @Override
     public void execute(TupleWindow inputWindow) {
         List<DbscanPoint> incomingPoints = new ArrayList<>();
-        for (Tuple tuple : inputWindow.get())
-            incomingPoints.add((DbscanPoint) tuple.getValue(0));
+        for (Tuple tuple : inputWindow.get()) {
+            DbscanStatusesCluster cluster = ((DbscanStatusesCluster) tuple.getValue(0));
+            incomingPoints.add(cluster);
+            cluster.setLastUpdateTime(executeCounter);
+        }
+        // удаляем старые точки из кластеров
+        for (ClustersCluster cluster : clustersDbscan.getClustering().getClusters()) {
+            List<DbscanStatusesCluster> removalList = new ArrayList<>();
+            for (DbscanStatusesCluster statusesCluster : cluster.getAssignedPoints()) {
+                // 600 - примерно 5 часов
+                if (statusesCluster.getLastUpdateTime() > executeCounter * 600)
+                    removalList.add(statusesCluster);
+            }
+            for (DbscanStatusesCluster statusesCluster : removalList) {
+                cluster.getAssignedPoints().remove(statusesCluster);
+            }
+        }
         long start = System.currentTimeMillis();
         clustersDbscan.run(incomingPoints);
         LOG.info("Количество микрокластеров = " + incomingPoints.size());
