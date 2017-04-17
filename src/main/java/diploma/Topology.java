@@ -1,8 +1,6 @@
 package diploma;
 
-import diploma.bolts.DenStreamMicroClusteringBolt;
-import diploma.bolts.DenStreamMacroClusteringWindowBolt;
-import diploma.bolts.StatisticsBolt;
+import diploma.bolts.MyDenStreamMicroClusteringBolt;
 import diploma.spouts.creators.SpoutCreator;
 import org.apache.storm.Config;
 import org.apache.storm.LocalCluster;
@@ -13,12 +11,9 @@ import org.apache.storm.generated.InvalidTopologyException;
 import org.apache.storm.generated.StormTopology;
 import org.apache.storm.topology.IRichSpout;
 import org.apache.storm.topology.TopologyBuilder;
-import org.apache.storm.topology.base.BaseWindowedBolt;
 import org.apache.storm.utils.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.concurrent.TimeUnit;
 
 /**
  * Топология Apache Storm
@@ -40,16 +35,16 @@ public class Topology {
         TopologyBuilder topologyBuilder = new TopologyBuilder();
         IRichSpout spout = spoutCreator.createSpout();
         topologyBuilder.setSpout("spout", spout, numWorkers);
-        topologyBuilder.setBolt("microClusteringBolt", new DenStreamMicroClusteringBolt(), numWorkers).shuffleGrouping("spout");
-        topologyBuilder.setBolt("macroClusteringBolt", new DenStreamMacroClusteringWindowBolt()
-                .withWindow(
-                        // размер окна чуть-чуть больше, чем настройка TOPOLOGY_TICK_TUPLE_FREQ_SECS для болта,
-                        // чтобы все микрокластера поппадали в него
-                        new BaseWindowedBolt.Duration(31, TimeUnit.SECONDS),
-                        new BaseWindowedBolt.Duration(31, TimeUnit.SECONDS))
-                // parallelism hint ставим равным 1, чтобы все микрокластера обрабатывались в одном месте
-                , 1).shuffleGrouping("microClusteringBolt");
-        topologyBuilder.setBolt("statisticsBolt", new StatisticsBolt(), 1).shuffleGrouping("macroClusteringBolt");
+        topologyBuilder.setBolt("microClusteringBolt", new MyDenStreamMicroClusteringBolt(), numWorkers).shuffleGrouping("spout");
+//        topologyBuilder.setBolt("macroClusteringBolt", new DenStreamMacroClusteringWindowBolt()
+//                .withWindow(
+//                        // размер окна чуть-чуть больше, чем настройка TOPOLOGY_TICK_TUPLE_FREQ_SECS для болта,
+//                        // чтобы все микрокластера поппадали в него
+//                        new BaseWindowedBolt.Duration(31, TimeUnit.SECONDS),
+//                        new BaseWindowedBolt.Duration(31, TimeUnit.SECONDS))
+//                // parallelism hint ставим равным 1, чтобы все микрокластера обрабатывались в одном месте
+//                , 1).shuffleGrouping("microClusteringBolt");
+//        topologyBuilder.setBolt("statisticsBolt", new StatisticsBolt(), 1).shuffleGrouping("macroClusteringBolt");
 
         Config conf = new Config();
         conf.setDebug(false);

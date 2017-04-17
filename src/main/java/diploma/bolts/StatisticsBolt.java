@@ -1,10 +1,9 @@
 package diploma.bolts;
 
-import diploma.MacroClusteringStatistics;
 import diploma.clustering.MapUtil;
 import diploma.clustering.dbscan.points.DbscanClustersCluster;
-import diploma.clustering.dbscan.points.DbscanStatusesCluster;
-import diploma.dao.MacroClusteringStatisticsDao;
+import diploma.statistics.MacroClusteringStatistics;
+import diploma.statistics.dao.MacroClusteringStatisticsDao;
 import org.apache.storm.task.OutputCollector;
 import org.apache.storm.task.TopologyContext;
 import org.apache.storm.topology.BasicOutputCollector;
@@ -54,19 +53,19 @@ public class StatisticsBolt extends BaseBasicBolt {
      */
     private MacroClusteringStatistics getClusterStatistics(DbscanClustersCluster cluster) {
         MacroClusteringStatistics statistics = new MacroClusteringStatistics();
-        int totalNumberOfDocuments = 0;
-        Map<String, Integer> topTenTerms = new HashMap<>();
-        for (DbscanStatusesCluster statusesCluster: cluster.getAssignedPoints()) {
-            totalNumberOfDocuments += statusesCluster.getTfIdf().getDocumentNumber();
-            for (Map.Entry<String, Integer> entry: statusesCluster.getTfIdf().getTermFrequencyMap().entrySet())
-                topTenTerms.merge(entry.getKey(), entry.getValue(), (num1, num2) -> num1 + num2);
-        }
-        topTenTerms = MapUtil.putFirstEntries(10, MapUtil.sortByValue(topTenTerms));
-        statistics.setTimeFactor(new Timestamp(new Date().getTime()));
-        statistics.setClusterId(cluster.getId());
-        statistics.setNumberOfDocuments(totalNumberOfDocuments);
-        statistics.setTopTerms(topTenTerms);
-        statistics.setAbsorbedClusterIds(cluster.getAbsorbedClusterIds());
+//        int totalNumberOfDocuments = 0;
+//        Map<String, Integer> topTenTerms = new HashMap<>();
+//        for (DbscanStatusesCluster statusesCluster: cluster.getAssignedPoints()) {
+//            totalNumberOfDocuments += statusesCluster.getTfIdf().getDocumentNumber();
+//            for (Map.Entry<String, Integer> entry: statusesCluster.getTfIdf().getTermFrequencyMap().entrySet())
+//                topTenTerms.merge(entry.getKey(), entry.getValue(), (num1, num2) -> num1 + num2);
+//        }
+//        topTenTerms = MapUtil.putFirstEntries(10, MapUtil.sortByValue(topTenTerms));
+//        statistics.setTimeFactor(new Timestamp(new Date().getTime()));
+//        statistics.setClusterId(cluster.getId());
+//        statistics.setNumberOfDocuments(totalNumberOfDocuments);
+//        statistics.setTopTerms(topTenTerms);
+//        statistics.setAbsorbedClusterIds(cluster.getAbsorbedClusterIds());
         return statistics;
     }
 }

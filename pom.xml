@@ -44,6 +44,11 @@
             <version>0.1.0</version>
         </dependency>
         <dependency>
+            <groupId>com.gorshkov</groupId>
+            <artifactId>clustering-statistics</artifactId>
+            <version>0.1.0</version>
+        </dependency>
+        <dependency>
             <groupId>mysql</groupId>
             <artifactId>mysql-connector-java</artifactId>
             <version>5.1.37</version>

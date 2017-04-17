@@ -30,18 +30,18 @@ public class PointsMacroClusteringWindowBolt extends BaseWindowedBolt {
     @Override
     public void prepare(Map stormConf, TopologyContext context, OutputCollector collector) {
         this.collector = collector;
-        clustersDbscan = new PointsDbscan(3, 1000.0);
+//        clustersDbscan = new PointsDbscan(3, 1000.0);
     }
 
     @Override
     public void execute(TupleWindow inputWindow) {
-        List<DbscanPoint> incomingPoints = new ArrayList<>();
-        for (Tuple tuple : inputWindow.get())
-            incomingPoints.add((DbscanPoint) tuple.getValue(0));
-        long start = System.currentTimeMillis();
-        clustersDbscan.run(incomingPoints);
-        LOG.info("Количество микрокластеров = " + incomingPoints.size());
-        LOG.info("Время выполнения dbscan на " + executeCounter + "-й итерации:" + ((double) System.currentTimeMillis() - (double) start) / 1000.0);
+//        List<DbscanPoint> incomingPoints = new ArrayList<>();
+//        for (Tuple tuple : inputWindow.get())
+//            incomingPoints.add((DbscanPoint) tuple.getValue(0));
+//        long start = System.currentTimeMillis();
+//        clustersDbscan.run(incomingPoints);
+//        LOG.info("Количество микрокластеров = " + incomingPoints.size());
+//        LOG.info("Время выполнения dbscan на " + executeCounter + "-й итерации:" + ((double) System.currentTimeMillis() - (double) start) / 1000.0);
         // т.к окно вызывается каждые 30 секунд, то для сохранения статистики каждые 5 минут нужно каждые 10 раз вызывать emit
 //        if (++executeCounter % 20 == 0)
 //            collector.emit(new Values(new ArrayList<>(clustersDbscan.getClustering().getClusters())));

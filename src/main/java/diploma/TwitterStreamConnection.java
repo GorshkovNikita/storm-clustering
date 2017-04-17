@@ -30,6 +30,12 @@ public class TwitterStreamConnection {
         StatusesFilterEndpoint endpoint = new StatusesFilterEndpoint();
         endpoint.languages(new ArrayList<>(Arrays.asList("en")));
         endpoint.trackTerms(new ArrayList<>(Arrays.asList("news", "politics", "sports", "sport", "tech", "it", "culture")));
+//        Location usa = new Location(new Location.Coordinate(-123.730725, 24.323892), new Location.Coordinate(-62.844275, 48.555015));
+//        Location newYork = new Location(new Location.Coordinate(-77.505715, 38.615968), new Location.Coordinate(-73.289025, 41.207485));
+//        Location california = new Location(new Location.Coordinate(-125.895387, 31.452910), new Location.Coordinate(-119.488694, 42.239864));
+//        List<Location> locations = new ArrayList<>();
+//        locations.add(usa);
+//        endpoint.locations(locations);
         endpoint.stallWarnings(false);
         Authentication auth = new OAuth1(consumerKey, consumerSecret, token, secret);
         this.client = new ClientBuilder()

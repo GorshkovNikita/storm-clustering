@@ -39,38 +39,38 @@ public class PointsMicroClusteringBolt extends BaseBasicBolt {
 
     @Override
     public void execute(Tuple tuple, BasicOutputCollector collector) {
-        if (isTickTuple(tuple)) {
-            List<PointsCluster> clustersForRemove = new ArrayList<>();
-            // По факту это выделение potential micro clusters, как в статье, только
-            // не учитывается вес кластера в зависимости от времени.
-            // Остальные кластера можно считать outlier micro clusters
-            List<PointsCluster> bigClusters = microClustering.getClusters()
-                    .stream()
-                    .filter((cluster) -> cluster.getAssignedPoints().size() > MIN_POINTS)
-                    .collect(Collectors.toList());
-            int numberOfClusters = 0;
-            for (PointsCluster cluster: microClustering.getClusters()) {
-                // все potential micro clusters не отправляются дальше в целях оптимизации
-                if (numberOfClusters < MAX_CLUSTERS && bigClusters.contains(cluster)) {
-                    numberOfClusters++;
-                    // считаем центр масс перед удалением точек
-                    cluster.getCenterOfMass();
-                    cluster.getAssignedPoints().clear();
-                    collector.emit(new Values(cluster));
-                    clustersForRemove.add(cluster);
-                }
-                // удаляются старые микрокластера
-                else if (microClustering.getTimestamp() - cluster.getLastUpdateTime() > 25000)
-                    clustersForRemove.add(cluster);
-            }
-            for (PointsCluster cluster: clustersForRemove)
-                microClustering.getClusters().remove(cluster);
-        }
-        else {
-            // для KafkaSpout field name = str
-            DbscanSimplePoint point = (DbscanSimplePoint) tuple.getValueByField("str");
-            if (point != null) microClustering.processNext(point);
-        }
+//        if (isTickTuple(tuple)) {
+//            List<PointsCluster> clustersForRemove = new ArrayList<>();
+//            // По факту это выделение potential micro clusters, как в статье, только
+//            // не учитывается вес кластера в зависимости от времени.
+//            // Остальные кластера можно считать outlier micro clusters
+//            List<PointsCluster> bigClusters = microClustering.getClusters()
+//                    .stream()
+//                    .filter((cluster) -> cluster.getAssignedPoints().size() > MIN_POINTS)
+//                    .collect(Collectors.toList());
+//            int numberOfClusters = 0;
+//            for (PointsCluster cluster: microClustering.getClusters()) {
+//                // все potential micro clusters не отправляются дальше в целях оптимизации
+//                if (numberOfClusters < MAX_CLUSTERS && bigClusters.contains(cluster)) {
+//                    numberOfClusters++;
+//                    // считаем центр масс перед удалением точек
+//                    cluster.getCenterOfMass();
+//                    cluster.getAssignedPoints().clear();
+//                    collector.emit(new Values(cluster));
+//                    clustersForRemove.add(cluster);
+//                }
+//                // удаляются старые микрокластера
+//                else if (microClustering.getTimestamp() - cluster.getLastUpdateTime() > 25000)
+//                    clustersForRemove.add(cluster);
+//            }
+//            for (PointsCluster cluster: clustersForRemove)
+//                microClustering.getClusters().remove(cluster);
+//        }
+//        else {
+//            // для KafkaSpout field name = str
+//            DbscanSimplePoint point = (DbscanSimplePoint) tuple.getValueByField("str");
+//            if (point != null) microClustering.processNext(point);
+//        }
     }
 
     @Override
