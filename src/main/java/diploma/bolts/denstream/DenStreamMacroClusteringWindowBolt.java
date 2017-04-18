@@ -39,7 +39,7 @@ public class DenStreamMacroClusteringWindowBolt extends BaseWindowedBolt {
 
     @Override
     public void execute(TupleWindow inputWindow) {
-        List<DbscanStatusesCluster> incomingPoints = new ArrayList<>();
+        List<SimplifiedDbscanStatusesCluster> incomingPoints = new ArrayList<>();
         for (Tuple tuple : inputWindow.get()) {
             StatusesCluster cluster = ((StatusesCluster) tuple.getValue(0));
             incomingPoints.add(new SimplifiedDbscanStatusesCluster(cluster, cluster.getMacroClusterId()));
@@ -49,7 +49,7 @@ public class DenStreamMacroClusteringWindowBolt extends BaseWindowedBolt {
         LOG.info("Количество микрокластеров = " + incomingPoints.size());
         LOG.info("Время выполнения dbscan на " + executeCounter + "-й итерации:" + ((double) System.currentTimeMillis() - (double) start) / 1000.0);
         Clustering<Cluster<StatusesCluster>, StatusesCluster> macroClustering = new Clustering<>();
-        for (DbscanStatusesCluster point: incomingPoints) {
+        for (SimplifiedDbscanStatusesCluster point: incomingPoints) {
             if (macroClustering.findClusterById(point.getClusterId()) == null) {
                 Cluster<StatusesCluster> cluster = new Cluster<>(point.getClusterId(), 0.00001);
                 cluster.assignPoint(point.getStatusesCluster());

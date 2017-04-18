@@ -45,7 +45,7 @@ public class MyDenStreamMacroClusteringWindowBolt extends BaseWindowedBolt {
         List<DbscanStatusesCluster> incomingPoints = new ArrayList<>();
         for (Tuple tuple : inputWindow.get()) {
             StatusesCluster cluster = ((StatusesCluster) tuple.getValue(0));
-            incomingPoints.add(new DbscanStatusesCluster(cluster));
+            incomingPoints.add(new DbscanStatusesCluster(cluster, cluster.getMacroClusterId()));
         }
 
         // удаляем старые микрокластера

@@ -2,6 +2,7 @@ package diploma;
 
 import diploma.bolts.StatusesCreatingBolt;
 import diploma.bolts.StatusesFilteringBolt;
+import diploma.bolts.denstream.DenStreamMacroClusteringBolt;
 import diploma.bolts.denstream.DenStreamMacroClusteringWindowBolt;
 import diploma.bolts.denstream.DenStreamMicroClusteringBolt;
 import diploma.bolts.denstream.DenStreamStatisticsBolt;
@@ -43,16 +44,17 @@ public class DenStreamTopology {
         TopologyBuilder topologyBuilder = new TopologyBuilder();
         IRichSpout spout = spoutCreator.createSpout();
         topologyBuilder.setSpout("spout", spout, numWorkers);
-        topologyBuilder.setBolt("statusesCreatingBolt", new StatusesCreatingBolt()).shuffleGrouping("spout");
-        topologyBuilder.setBolt("statusesFilteringBolt", new StatusesFilteringBolt()).shuffleGrouping("statusesCreatingBolt");
+        topologyBuilder.setBolt("statusesCreatingBolt", new StatusesCreatingBolt(), numWorkers).shuffleGrouping("spout");
+        topologyBuilder.setBolt("statusesFilteringBolt", new StatusesFilteringBolt(), numWorkers).shuffleGrouping("statusesCreatingBolt");
         topologyBuilder.setBolt("microClusteringBolt", new DenStreamMicroClusteringBolt(), numWorkers).shuffleGrouping("statusesFilteringBolt");
-        topologyBuilder.setBolt("macroClusteringBolt", new DenStreamMacroClusteringWindowBolt()
-                .withWindow(
-                        new BaseWindowedBolt.Duration(60, TimeUnit.SECONDS),
-                        new BaseWindowedBolt.Duration(60, TimeUnit.SECONDS))
-                // parallelism hint ставим равным 1, чтобы все микрокластера обрабатывались в одном месте
-                , 1).shuffleGrouping("microClusteringBolt");
-        topologyBuilder.setBolt("statisticsBolt", new DenStreamStatisticsBolt(), 1).shuffleGrouping("macroClusteringBolt");
+        topologyBuilder.setBolt("macroClusteringBolt", new DenStreamMacroClusteringBolt(numWorkers), 1).shuffleGrouping("microClusteringBolt");
+//        topologyBuilder.setBolt("macroClusteringBolt", new DenStreamMacroClusteringWindowBolt()
+//                .withWindow(
+//                        new BaseWindowedBolt.Duration(60, TimeUnit.SECONDS),
+//                        new BaseWindowedBolt.Duration(60, TimeUnit.SECONDS))
+//                // parallelism hint ставим равным 1, чтобы все микрокластера обрабатывались в одном месте
+//                , 1).shuffleGrouping("microClusteringBolt");
+//        topologyBuilder.setBolt("statisticsBolt", new DenStreamStatisticsBolt(), 1).shuffleGrouping("macroClusteringBolt");
 
         Config conf = new Config();
         conf.setDebug(false);

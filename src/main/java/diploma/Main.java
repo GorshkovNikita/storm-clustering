@@ -43,7 +43,7 @@ public class Main {
         }
 //        Topology topology = new Topology(1, startupType, spoutCreator);
 //        PointsTopology topology = new PointsTopology(1, startupType, spoutCreator);
-        DenStreamTopology topology = new DenStreamTopology(1, startupType, spoutCreator);
+        DenStreamTopology topology = new DenStreamTopology(4, startupType, spoutCreator);
         try {
             topology.submit();
         } catch (Exception ex) {
