@@ -1,6 +1,6 @@
 package diploma;
 
-import diploma.bolts.MyDenStreamMicroClusteringBolt;
+import diploma.bolts.mydenstream.MyDenStreamMicroClusteringBolt;
 import diploma.spouts.creators.SpoutCreator;
 import org.apache.storm.Config;
 import org.apache.storm.LocalCluster;

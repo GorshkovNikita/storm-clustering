@@ -1,10 +1,9 @@
-package diploma.bolts;
+package diploma.bolts.mydenstream;
 
 
 import diploma.clustering.clusters.Cluster;
 import diploma.clustering.clusters.Clustering;
 import diploma.clustering.clusters.StatusesCluster;
-import diploma.clustering.dbscan.ClustersDbscan;
 import diploma.clustering.dbscan.StatefulDbscan;
 import diploma.clustering.dbscan.points.DbscanPoint;
 import diploma.clustering.dbscan.points.DbscanStatusesCluster;

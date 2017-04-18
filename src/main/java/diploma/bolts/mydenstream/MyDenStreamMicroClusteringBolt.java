@@ -1,4 +1,4 @@
-package diploma.bolts;
+package diploma.bolts.mydenstream;
 
 import diploma.clustering.DenStream;
 import diploma.clustering.EnhancedStatus;

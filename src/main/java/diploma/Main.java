@@ -1,7 +1,5 @@
 package diploma;
 
-import diploma.denstream.DenStreamTopology;
-import diploma.points.PointsTopology;
 import diploma.spouts.creators.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

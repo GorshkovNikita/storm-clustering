@@ -1,13 +1,16 @@
-package diploma.denstream;
+package diploma.bolts.denstream;
 
-import diploma.bolts.MyDenStreamMicroClusteringBolt;
+import diploma.bolts.mydenstream.MyDenStreamMicroClusteringBolt;
 import diploma.clustering.DenStream;
 import diploma.clustering.EnhancedStatus;
+import diploma.clustering.MapUtil;
 import diploma.clustering.clusters.StatusesCluster;
+import diploma.clustering.dbscan.points.SimplifiedDbscanStatusesCluster;
 import diploma.statistics.dao.TweetDao;
 import org.apache.commons.lang.SerializationUtils;
 import org.apache.storm.Config;
 import org.apache.storm.Constants;
+import org.apache.storm.shade.org.apache.commons.exec.util.MapUtils;
 import org.apache.storm.task.TopologyContext;
 import org.apache.storm.topology.BasicOutputCollector;
 import org.apache.storm.topology.OutputFieldsDeclarer;
@@ -17,9 +20,6 @@ import org.apache.storm.tuple.Tuple;
 import org.apache.storm.tuple.Values;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import twitter4j.Status;
-import twitter4j.TwitterException;
-import twitter4j.TwitterObjectFactory;
 
 import java.util.Map;
 
@@ -29,39 +29,40 @@ import java.util.Map;
 public class DenStreamMicroClusteringBolt extends BaseBasicBolt {
     private static final Logger LOG = LoggerFactory.getLogger(MyDenStreamMicroClusteringBolt.class);
     private DenStream denStream;
-    private static final int MIN_POINTS = 30;
-    private static final int MAX_CLUSTERS = 100;
-    private TweetDao tweetDao;
 
     @Override
     public void prepare(Map stormConf, TopologyContext context) {
         super.prepare(stormConf, context);
         denStream = new DenStream(10, 10, 5.0, 0.0000001, 0.4);
-        tweetDao = new TweetDao();
     }
 
     @Override
     public void execute(Tuple tuple, BasicOutputCollector collector) {
         if (isTickTuple(tuple)) {
+            // освобождаем чуток памяти
+            for (StatusesCluster cluster : denStream.getPotentialMicroClustering().getClusters()) {
+                if (cluster.getTfIdf().getTermFrequencyMap().size() > 1000)
+                    cluster.getTfIdf().setTermFrequencyMap(MapUtil.putFirstEntries(1000, MapUtil.sortByValue(cluster.getTfIdf().getTermFrequencyMap())));
+            }
+
+            for (StatusesCluster cluster : denStream.getOutlierMicroClustering().getClusters()) {
+                if (cluster.getTfIdf().getTermFrequencyMap().size() > 1000)
+                    cluster.getTfIdf().setTermFrequencyMap(MapUtil.putFirstEntries(1000, MapUtil.sortByValue(cluster.getTfIdf().getTermFrequencyMap())));
+            }
+
             for (StatusesCluster cluster : denStream.getPotentialMicroClustering().getClusters()) {
                 StatusesCluster clusterCopy = (StatusesCluster) SerializationUtils.clone(cluster);
-                clusterCopy.getTfIdf().sortTermFrequencyMap();
+                clusterCopy.getTfIdf().setTermFrequencyMap(
+                        // there is no need to sort, because it was already done above
+                        MapUtil.putFirstEntries(20, clusterCopy.getTfIdf().getTermFrequencyMap()));
                 collector.emit(new Values(clusterCopy));
+                cluster.resetProcessedPerTimeUnit();
             }
+
+            for (StatusesCluster cluster : denStream.getOutlierMicroClustering().getClusters())
+                cluster.resetProcessedPerTimeUnit();
         }
-        else {
-        // для KafkaSpout field name = str
-            String tweetJson = tuple.getStringByField("str");
-            Integer msgId = tuple.getIntegerByField("msgId");
-            if (tweetJson != null) {
-                try {
-                    Status status = TwitterObjectFactory.createStatus(tweetJson);
-//                    tweetDao.saveTweet(status);
-                    denStream.processNext(new EnhancedStatus(status));
-//                    denStream.processNext(status);
-                } catch (TwitterException ignored) {}
-            }
-        }
+        else denStream.processNext((EnhancedStatus) tuple.getValueByField("status"));
     }
 
     @Override

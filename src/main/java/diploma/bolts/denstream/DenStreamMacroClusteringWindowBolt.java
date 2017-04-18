@@ -1,11 +1,11 @@
-package diploma.denstream;
+package diploma.bolts.denstream;
 
 import diploma.clustering.clusters.Cluster;
 import diploma.clustering.clusters.Clustering;
 import diploma.clustering.clusters.StatusesCluster;
 import diploma.clustering.dbscan.Dbscan;
 import diploma.clustering.dbscan.points.DbscanStatusesCluster;
-import org.apache.storm.Config;
+import diploma.clustering.dbscan.points.SimplifiedDbscanStatusesCluster;
 import org.apache.storm.task.OutputCollector;
 import org.apache.storm.task.TopologyContext;
 import org.apache.storm.topology.OutputFieldsDeclarer;
@@ -42,7 +42,7 @@ public class DenStreamMacroClusteringWindowBolt extends BaseWindowedBolt {
         List<DbscanStatusesCluster> incomingPoints = new ArrayList<>();
         for (Tuple tuple : inputWindow.get()) {
             StatusesCluster cluster = ((StatusesCluster) tuple.getValue(0));
-            incomingPoints.add(new DbscanStatusesCluster(cluster));
+            incomingPoints.add(new SimplifiedDbscanStatusesCluster(cluster, cluster.getMacroClusterId()));
         }
         long start = System.currentTimeMillis();
         dbscan.run(incomingPoints);

@@ -1,6 +1,5 @@
-package diploma.bolts;
+package diploma.bolts.mydenstream;
 
-import diploma.clustering.MapUtil;
 import diploma.clustering.dbscan.points.DbscanClustersCluster;
 import diploma.statistics.MacroClusteringStatistics;
 import diploma.statistics.dao.MacroClusteringStatisticsDao;
@@ -13,9 +12,6 @@ import org.apache.storm.tuple.Tuple;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.sql.Timestamp;
-import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 

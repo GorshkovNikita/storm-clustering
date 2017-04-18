@@ -1,8 +1,12 @@
-package diploma.denstream;
+package diploma;
 
-import diploma.StartupType;
-import diploma.bolts.MyDenStreamMacroClusteringWindowBolt;
-import diploma.bolts.MyDenStreamMicroClusteringBolt;
+import diploma.bolts.StatusesCreatingBolt;
+import diploma.bolts.StatusesFilteringBolt;
+import diploma.bolts.denstream.DenStreamMacroClusteringWindowBolt;
+import diploma.bolts.denstream.DenStreamMicroClusteringBolt;
+import diploma.bolts.denstream.DenStreamStatisticsBolt;
+import diploma.bolts.mydenstream.MyDenStreamMacroClusteringWindowBolt;
+import diploma.bolts.mydenstream.MyDenStreamMicroClusteringBolt;
 import diploma.spouts.creators.SpoutCreator;
 import org.apache.storm.Config;
 import org.apache.storm.LocalCluster;
@@ -39,8 +43,10 @@ public class DenStreamTopology {
         TopologyBuilder topologyBuilder = new TopologyBuilder();
         IRichSpout spout = spoutCreator.createSpout();
         topologyBuilder.setSpout("spout", spout, numWorkers);
-        topologyBuilder.setBolt("microClusteringBolt", new MyDenStreamMicroClusteringBolt(), numWorkers).shuffleGrouping("spout");
-        topologyBuilder.setBolt("macroClusteringBolt", new MyDenStreamMacroClusteringWindowBolt()
+        topologyBuilder.setBolt("statusesCreatingBolt", new StatusesCreatingBolt()).shuffleGrouping("spout");
+        topologyBuilder.setBolt("statusesFilteringBolt", new StatusesFilteringBolt()).shuffleGrouping("statusesCreatingBolt");
+        topologyBuilder.setBolt("microClusteringBolt", new DenStreamMicroClusteringBolt(), numWorkers).shuffleGrouping("statusesFilteringBolt");
+        topologyBuilder.setBolt("macroClusteringBolt", new DenStreamMacroClusteringWindowBolt()
                 .withWindow(
                         new BaseWindowedBolt.Duration(60, TimeUnit.SECONDS),
                         new BaseWindowedBolt.Duration(60, TimeUnit.SECONDS))

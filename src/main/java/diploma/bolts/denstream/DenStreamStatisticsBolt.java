@@ -1,4 +1,4 @@
-package diploma.denstream;
+package diploma.bolts.denstream;
 
 import diploma.clustering.MapUtil;
 import diploma.clustering.clusters.Cluster;
@@ -56,9 +56,11 @@ public class DenStreamStatisticsBolt extends BaseBasicBolt {
     private MacroClusteringStatistics getClusterStatistics(Cluster<StatusesCluster> cluster, Timestamp time) {
         MacroClusteringStatistics statistics = new MacroClusteringStatistics();
         int totalNumberOfDocuments = 0;
+        int totalProcessedPerTimeUnit = 0;
         Map<String, Integer> topTenTerms = new HashMap<>();
         for (StatusesCluster statusesCluster: cluster.getAssignedPoints()) {
             totalNumberOfDocuments += statusesCluster.getTfIdf().getDocumentNumber();
+            totalProcessedPerTimeUnit += statusesCluster.getProcessedPerTimeUnit();
             for (Map.Entry<String, Integer> entry: statusesCluster.getTfIdf().getTermFrequencyMap().entrySet())
                 topTenTerms.merge(entry.getKey(), entry.getValue(), (num1, num2) -> num1 + num2);
         }
@@ -68,6 +70,7 @@ public class DenStreamStatisticsBolt extends BaseBasicBolt {
         statistics.setClusterId(cluster.getId());
         statistics.setNumberOfDocuments(totalNumberOfDocuments);
         statistics.setTopTerms(topTenTerms);
+        statistics.setTotalProcessedPerTimeUnit(totalProcessedPerTimeUnit);
         statistics.setAbsorbedClusterIds(cluster.getAbsorbedClusterIds());
         return statistics;
     }
