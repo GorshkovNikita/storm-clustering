@@ -34,7 +34,7 @@ public class PointsSpout extends BaseRichSpout {
             randomPoint[i] = rnd.nextDouble() * 10000.0;
         collector.emit(new Values(new DbscanSimplePoint(randomPoint), ++msgId), msgId);
         try {
-            Thread.sleep(10);
+            Thread.sleep(1000);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }

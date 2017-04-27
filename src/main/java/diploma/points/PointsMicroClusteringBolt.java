@@ -1,5 +1,7 @@
 package diploma.points;
 
+import diploma.clustering.Point;
+import diploma.clustering.VectorOperations;
 import diploma.clustering.clusters.PointsCluster;
 import diploma.clustering.clusters.PointsClustering;
 import diploma.clustering.clusters.StatusesClustering;
@@ -14,6 +16,8 @@ import org.apache.storm.topology.base.BaseBasicBolt;
 import org.apache.storm.tuple.Fields;
 import org.apache.storm.tuple.Tuple;
 import org.apache.storm.tuple.Values;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import twitter4j.Status;
 import twitter4j.TwitterException;
 import twitter4j.TwitterObjectFactory;
@@ -27,6 +31,7 @@ import java.util.stream.Collectors;
  * @author Никита
  */
 public class PointsMicroClusteringBolt extends BaseBasicBolt {
+    private final Logger LOG = LoggerFactory.getLogger(PointsMicroClusteringBolt.class);
     private PointsClustering microClustering;
     private static final int MIN_POINTS = 30;
     private static final int MAX_CLUSTERS = 100;
@@ -39,6 +44,11 @@ public class PointsMicroClusteringBolt extends BaseBasicBolt {
 
     @Override
     public void execute(Tuple tuple, BasicOutputCollector collector) {
+        Point p = (Point) tuple.getValueByField("point");
+        Point zeroPoint = new Point(new Double[p.getCoordinatesVector().length]);
+        for (int i = 0; i < zeroPoint.getCoordinatesVector().length; i++)
+            zeroPoint.getCoordinatesVector()[i] = 0.0;
+        LOG.info("euclidean distance = " + VectorOperations.euclideanDistance(p.getCoordinatesVector(), zeroPoint.getCoordinatesVector()));
 //        if (isTickTuple(tuple)) {
 //            List<PointsCluster> clustersForRemove = new ArrayList<>();
 //            // По факту это выделение potential micro clusters, как в статье, только
@@ -76,7 +86,7 @@ public class PointsMicroClusteringBolt extends BaseBasicBolt {
     @Override
     public Map<String, Object> getComponentConfiguration() {
         Config conf = new Config();
-        conf.put(Config.TOPOLOGY_TICK_TUPLE_FREQ_SECS, 30);
+//        conf.put(Config.TOPOLOGY_TICK_TUPLE_FREQ_SECS, 30);
         return conf;
     }
 

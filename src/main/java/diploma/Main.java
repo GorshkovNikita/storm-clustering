@@ -1,5 +1,6 @@
 package diploma;
 
+import diploma.points.PointsTopology;
 import diploma.spouts.creators.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,8 +26,8 @@ public class Main {
         switch (startupType) {
             case LOCAL:
                 if (args.length < 2) {
-                    spoutCreator = new TwitterStreamingApiSpoutCreator();
-//                    spoutCreator = new PointsSpoutCreator();
+//                    spoutCreator = new TwitterStreamingApiSpoutCreator();
+                    spoutCreator = new PointsSpoutCreator();
                 }
                 else {
                     // параметры: local D:\MSU\diploma\tweets-sets\full-random.txt
@@ -42,8 +43,8 @@ public class Main {
                 return;
         }
 //        Topology topology = new Topology(1, startupType, spoutCreator);
-//        PointsTopology topology = new PointsTopology(1, startupType, spoutCreator);
-        DenStreamTopology topology = new DenStreamTopology(4, startupType, spoutCreator);
+        PointsTopology topology = new PointsTopology(1, startupType, spoutCreator);
+//        DenStreamTopology topology = new DenStreamTopology(4, startupType, spoutCreator);
         try {
             topology.submit();
         } catch (Exception ex) {

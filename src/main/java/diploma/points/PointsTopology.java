@@ -38,13 +38,14 @@ public class PointsTopology {
         IRichSpout spout = spoutCreator.createSpout();
         topologyBuilder.setSpout("spout", spout, numWorkers);
 
-        topologyBuilder.setBolt("microClustering", new PointsMicroClusteringBolt(), numWorkers).shuffleGrouping("spout");
-        topologyBuilder.setBolt("macroClustering", new PointsMacroClusteringWindowBolt()
-                .withWindow(
-                    new BaseWindowedBolt.Duration(31, TimeUnit.SECONDS),
-                    new BaseWindowedBolt.Duration(31, TimeUnit.SECONDS)),
-                    1)
-                .shuffleGrouping("microClustering");
+        topologyBuilder.setBolt("printer", new PointsPrintBolt(), numWorkers).shuffleGrouping("spout");
+        topologyBuilder.setBolt("microClustering", new PointsMicroClusteringBolt(), numWorkers).shuffleGrouping("printer");
+//        topologyBuilder.setBolt("macroClustering", new PointsMacroClusteringWindowBolt()
+//                .withWindow(
+//                    new BaseWindowedBolt.Duration(31, TimeUnit.SECONDS),
+//                    new BaseWindowedBolt.Duration(31, TimeUnit.SECONDS)),
+//                    1)
+//                .shuffleGrouping("microClustering");
 
         Config conf = new Config();
         conf.setDebug(false);
