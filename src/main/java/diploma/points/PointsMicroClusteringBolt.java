@@ -97,6 +97,6 @@ public class PointsMicroClusteringBolt extends BaseBasicBolt {
 
     @Override
     public void declareOutputFields(OutputFieldsDeclarer declarer) {
-        declarer.declare(new Fields("microClusters"));
+//        declarer.declare(new Fields("microClusters"));
     }
 }

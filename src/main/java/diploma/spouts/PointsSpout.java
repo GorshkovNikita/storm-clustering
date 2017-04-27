@@ -1,6 +1,7 @@
 package diploma.spouts;
 
 import diploma.TwitterStreamConnection;
+import diploma.clustering.Point;
 import diploma.clustering.dbscan.points.DbscanSimplePoint;
 import diploma.config.TwitterConfig;
 import org.apache.storm.spout.SpoutOutputCollector;
@@ -32,7 +33,7 @@ public class PointsSpout extends BaseRichSpout {
         Double[] randomPoint = new Double[2];
         for (int i = 0; i < 2; i++)
             randomPoint[i] = rnd.nextDouble() * 10000.0;
-        collector.emit(new Values(new DbscanSimplePoint(randomPoint), ++msgId), msgId);
+        collector.emit(new Values(new Point(randomPoint), ++msgId), msgId);
         try {
             Thread.sleep(1000);
         } catch (InterruptedException e) {
