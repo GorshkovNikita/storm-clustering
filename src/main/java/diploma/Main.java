@@ -17,15 +17,24 @@ public class Main {
     private static final Logger LOG = LoggerFactory.getLogger(Main.class);
 
     public static void main(String[] args) {
-        if (args.length < 1) {
-            LOG.error("You must enter the startup type: local or cluster");
+        if (args.length < 2) {
+            LOG.error("You must enter the startup type: local or cluster, and number of workers");
             return;
         }
         StartupType startupType = valueOf(args[0].toUpperCase());
+        Integer numWorkers;
+        try {
+            numWorkers = Integer.valueOf(args[1]);
+            if (numWorkers <= 0) throw new NumberFormatException();
+        }
+        catch (NumberFormatException ex) {
+            LOG.error("Wrong number of workers");
+            return;
+        }
         SpoutCreator spoutCreator;
         switch (startupType) {
             case LOCAL:
-                if (args.length < 2) {
+                if (args.length < 3) {
 //                    spoutCreator = new TwitterStreamingApiSpoutCreator();
                     spoutCreator = new PointsSpoutCreator();
                 }
@@ -44,7 +53,7 @@ public class Main {
                 return;
         }
 //        Topology topology = new Topology(1, startupType, spoutCreator);
-        PointsTopology topology = new PointsTopology(1, startupType, spoutCreator);
+        PointsTopology topology = new PointsTopology(numWorkers, startupType, spoutCreator);
 //        DenStreamTopology topology = new DenStreamTopology(4, startupType, spoutCreator);
         try {
             topology.submit();
