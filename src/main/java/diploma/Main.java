@@ -36,7 +36,8 @@ public class Main {
                 }
                 break;
             case CLUSTER:
-                spoutCreator = new KafkaSpoutCreator();
+                spoutCreator = new PointsSpoutCreator();
+//                spoutCreator = new KafkaSpoutCreator();
                 break;
             default:
                 LOG.error("Wrong startup type. It must be local or cluster");
