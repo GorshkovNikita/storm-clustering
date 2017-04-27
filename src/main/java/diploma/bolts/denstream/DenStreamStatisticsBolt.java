@@ -37,7 +37,7 @@ public class DenStreamStatisticsBolt extends BaseBasicBolt {
 
     @Override
     public void execute(Tuple input, BasicOutputCollector collector) {
-        statisticsCounter += 5;
+        statisticsCounter++;
         Timestamp time = new Timestamp(new Date().getTime());
         List<Cluster<StatusesCluster>> macroClusters = (List<Cluster<StatusesCluster>>) input.getValue(0);
         for (Cluster<StatusesCluster> cluster: macroClusters)

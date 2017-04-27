@@ -54,11 +54,11 @@ public class DenStreamTopology {
 //                        new BaseWindowedBolt.Duration(60, TimeUnit.SECONDS))
 //                // parallelism hint ставим равным 1, чтобы все микрокластера обрабатывались в одном месте
 //                , 1).shuffleGrouping("microClusteringBolt");
-//        topologyBuilder.setBolt("statisticsBolt", new DenStreamStatisticsBolt(), 1).shuffleGrouping("macroClusteringBolt");
+        topologyBuilder.setBolt("statisticsBolt", new DenStreamStatisticsBolt(), 1).shuffleGrouping("macroClusteringBolt");
 
         Config conf = new Config();
         conf.setDebug(false);
-        conf.setMaxSpoutPending(4000);
+        conf.setMaxSpoutPending(1000);
         conf.setNumWorkers(numWorkers);
         conf.setMessageTimeoutSecs(240);
         StormTopology topology = topologyBuilder.createTopology();

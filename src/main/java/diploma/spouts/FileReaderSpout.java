@@ -25,6 +25,7 @@ public class FileReaderSpout extends BaseRichSpout {
     // НЕ распределенная переменная, т.е для каждого потока из numWorkers будет свой счетчик
     private int msgId = 0;
     private String filePath;
+    public static int numberOfEmittedMessages = 0;
 
     public FileReaderSpout(Path filePath) {
         this.filePath = filePath.toString();
@@ -42,6 +43,7 @@ public class FileReaderSpout extends BaseRichSpout {
             do {
                 line = reader.readLine();
                 collector.emit(new Values(line, ++msgId), msgId);
+                numberOfEmittedMessages++;
                 Thread.sleep(10);
             } while (line != null);
         } catch (IOException e) {

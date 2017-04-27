@@ -1,5 +1,7 @@
 package diploma.bolts.denstream;
 
+import com.google.common.collect.HashBasedTable;
+import com.google.common.collect.Table;
 import diploma.clustering.DenStream;
 import diploma.clustering.EnhancedStatus;
 import diploma.clustering.MapUtil;
@@ -20,10 +22,8 @@ import org.apache.storm.tuple.Values;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
+import java.io.Serializable;
+import java.util.*;
 
 /**
  * @author Никита
@@ -32,8 +32,13 @@ public class DenStreamMacroClusteringBolt extends BaseBasicBolt {
     private static final Logger LOG = LoggerFactory.getLogger(DenStreamMacroClusteringBolt.class);
     private int numWorkers;
     private List<SimplifiedDbscanStatusesCluster> microClusters;
+    /**
+     * Переменная, равная количеству инстансов, на которые распараллелены микрокластера.
+     * Нужна для того, чтобы понять, когда можно проводить макрокластеризацию
+     */
     private int listsReceived = 0;
     private Dbscan dbscan;
+    private Map<Integer, Integer> macroClusterIds;
 
     public DenStreamMacroClusteringBolt(int numWorkers) {
         this.numWorkers = numWorkers;
@@ -43,32 +48,42 @@ public class DenStreamMacroClusteringBolt extends BaseBasicBolt {
     public void prepare(Map stormConf, TopologyContext context) {
         super.prepare(stormConf, context);
         this.microClusters = new ArrayList<>();
+        this.macroClusterIds = new HashMap<>();
         this.dbscan = new Dbscan(numWorkers - 1, 0.7);
     }
 
     @Override
     public void execute(Tuple tuple, BasicOutputCollector collector) {
         for (StatusesCluster cluster : (List<StatusesCluster>) tuple.getValueByField("microClusters"))
-            microClusters.add(new SimplifiedDbscanStatusesCluster(cluster, cluster.getMacroClusterId()));
+            microClusters.add(new SimplifiedDbscanStatusesCluster(cluster, macroClusterIds.get(
+                    cluster.getId()) == null ? 0 : macroClusterIds.get(cluster.getId())));
+//            microClusters.add(new SimplifiedDbscanStatusesCluster(cluster, macroClusterIds.get(cluster.getId(), tuple.getSourceTask()) == null ? 0 : macroClusterIds.get(cluster.getId(), tuple.getSourceTask())));
+//        LOG.info("task id = " + tuple.getSourceTask());
         if (++listsReceived == numWorkers) {
             dbscan.run(microClusters);
             Clustering<Cluster<StatusesCluster>, StatusesCluster> macroClustering = new Clustering<>();
             for (SimplifiedDbscanStatusesCluster point: microClusters) {
-                if (macroClustering.findClusterById(point.getClusterId()) == null) {
-                    Cluster<StatusesCluster> cluster = new Cluster<>(point.getClusterId(), 0.00001);
-                    cluster.assignPoint(point.getStatusesCluster());
-                    macroClustering.addCluster(cluster);
-                }
-                else {
-                    Cluster<StatusesCluster> cluster = macroClustering.findClusterById(point.getClusterId());
-                    cluster.assignPoint(point.getStatusesCluster());
+                // поле clusterId от point записывается в dbscan.run()
+                if (!point.isNoise()) {
+                    Cluster<StatusesCluster> clusterById = macroClustering.findClusterById(point.getClusterId());
+                    if (clusterById == null) {
+                        Cluster<StatusesCluster> cluster = new Cluster<>(point.getClusterId(), 0.00001);
+                        cluster.assignPoint(point.getStatusesCluster());
+                        macroClustering.addCluster(cluster);
+//                        macroClusterIds.put(cluster.getId(), tuple.getSourceTask(), point.getClusterId());
+                        macroClusterIds.put(point.getStatusesCluster().getId(), point.getClusterId());
+                    }
+                    else {
+                        macroClusterIds.put(point.getStatusesCluster().getId(), point.getClusterId());
+                        clusterById.assignPoint(point.getStatusesCluster());
+                    }
                 }
             }
+            collector.emit(new Values(SerializationUtils.clone((Serializable) macroClustering.getClusters())));
             LOG.info("number of macro clusters = " + macroClustering.getClusters().size());
             listsReceived = 0;
             microClusters.clear();
         }
-
     }
 
     @Override
