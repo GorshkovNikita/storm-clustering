@@ -38,8 +38,8 @@ public class PointsTopology {
         IRichSpout spout = spoutCreator.createSpout();
         topologyBuilder.setSpout("spout", spout, numWorkers);
 
-        topologyBuilder.setBolt("printer", new PointsPrintBolt(), numWorkers).shuffleGrouping("spout").addConfiguration("printer", 1);
-        topologyBuilder.setBolt("microClustering", new PointsMicroClusteringBolt(), numWorkers).shuffleGrouping("printer").addConfiguration("euclidean", 2);
+        topologyBuilder.setBolt("printer", new PointsPrintBolt(), numWorkers).shuffleGrouping("spout").addConfiguration("tags", "printer");
+        topologyBuilder.setBolt("microClustering", new PointsMicroClusteringBolt(), numWorkers).shuffleGrouping("printer").addConfiguration("tags", "euclidean");
 //        topologyBuilder.setBolt("macroClustering", new PointsMacroClusteringWindowBolt()
 //                .withWindow(
 //                    new BaseWindowedBolt.Duration(31, TimeUnit.SECONDS),
