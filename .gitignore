@@ -4,5 +4,7 @@ src/main/resources/twitter-config.properties
 src/main/resources/mysql-config.properties
 *.iml
 *.iws
+*.log
 logs/
 target/
+*.out

@@ -45,16 +45,16 @@ public class Main {
                 }
                 break;
             case CLUSTER:
-                spoutCreator = new PointsSpoutCreator();
-//                spoutCreator = new KafkaSpoutCreator();
+//                spoutCreator = new PointsSpoutCreator();
+                spoutCreator = new KafkaSpoutCreator();
                 break;
             default:
                 LOG.error("Wrong startup type. It must be local or cluster");
                 return;
         }
 //        Topology topology = new Topology(1, startupType, spoutCreator);
-        PointsTopology topology = new PointsTopology(numWorkers, startupType, spoutCreator);
-//        DenStreamTopology topology = new DenStreamTopology(4, startupType, spoutCreator);
+//        PointsTopology topology = new PointsTopology(numWorkers, startupType, spoutCreator);
+        DenStreamTopology topology = new DenStreamTopology(numWorkers, startupType, spoutCreator);
         try {
             topology.submit();
         } catch (Exception ex) {

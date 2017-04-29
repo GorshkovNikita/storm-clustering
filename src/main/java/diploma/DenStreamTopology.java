@@ -44,22 +44,40 @@ public class DenStreamTopology {
         TopologyBuilder topologyBuilder = new TopologyBuilder();
         IRichSpout spout = spoutCreator.createSpout();
         topologyBuilder.setSpout("spout", spout, numWorkers);
-        topologyBuilder.setBolt("statusesCreatingBolt", new StatusesCreatingBolt(), numWorkers).shuffleGrouping("spout");
-        topologyBuilder.setBolt("statusesFilteringBolt", new StatusesFilteringBolt(), numWorkers).shuffleGrouping("statusesCreatingBolt");
-        topologyBuilder.setBolt("microClusteringBolt", new DenStreamMicroClusteringBolt(), numWorkers).shuffleGrouping("statusesFilteringBolt");
-        topologyBuilder.setBolt("macroClusteringBolt", new DenStreamMacroClusteringBolt(numWorkers), 1).shuffleGrouping("microClusteringBolt");
+
+        topologyBuilder.setBolt("statusesCreatingBolt", new StatusesCreatingBolt(), numWorkers)
+                .localOrShuffleGrouping("spout")
+                .addConfiguration("tags", "microClustering");
+
+        topologyBuilder.setBolt("statusesFilteringBolt", new StatusesFilteringBolt(), numWorkers)
+                .localOrShuffleGrouping("statusesCreatingBolt")
+                .addConfiguration("tags", "microClustering");
+
+        topologyBuilder.setBolt("microClusteringBolt", new DenStreamMicroClusteringBolt(), numWorkers)
+                .localOrShuffleGrouping("statusesFilteringBolt")
+                .addConfiguration("tags", "microClustering");
+
+        topologyBuilder.setBolt("macroClusteringBolt", new DenStreamMacroClusteringBolt(numWorkers), 1)
+                .shuffleGrouping("microClusteringBolt")
+                .addConfiguration("tags", "macroClustering");
+
+        topologyBuilder.setBolt("statisticsBolt", new DenStreamStatisticsBolt(), 1)
+                .shuffleGrouping("macroClusteringBolt")
+                .addConfiguration("tags", "macroClustering");
+
 //        topologyBuilder.setBolt("macroClusteringBolt", new DenStreamMacroClusteringWindowBolt()
 //                .withWindow(
 //                        new BaseWindowedBolt.Duration(60, TimeUnit.SECONDS),
 //                        new BaseWindowedBolt.Duration(60, TimeUnit.SECONDS))
 //                // parallelism hint ставим равным 1, чтобы все микрокластера обрабатывались в одном месте
 //                , 1).shuffleGrouping("microClusteringBolt");
-        topologyBuilder.setBolt("statisticsBolt", new DenStreamStatisticsBolt(), 1).shuffleGrouping("macroClusteringBolt");
 
         Config conf = new Config();
         conf.setDebug(false);
         conf.setMaxSpoutPending(1000);
-        conf.setNumWorkers(numWorkers);
+        // +1 потому что numWorkers указывает на сколько воркеров параллелить микрокластеризацию,
+        // но всегда еще должен быть один воркер для макрокластеризации и записи статистики
+        conf.setNumWorkers(numWorkers + 1);
         conf.setMessageTimeoutSecs(240);
         StormTopology topology = topologyBuilder.createTopology();
 
