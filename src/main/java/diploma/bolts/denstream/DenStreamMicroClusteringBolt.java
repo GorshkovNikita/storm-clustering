@@ -98,7 +98,7 @@ public class DenStreamMicroClusteringBolt extends BaseBasicBolt {
      */
     private boolean checkEmitTime(long statusTime) {
         boolean result = false;
-        if ((statusTime - timeOfFirstTweet) % 20000 >= 0 && (statusTime - timeOfFirstTweet) % 20000 <= 4000 &&
+        if ((statusTime - timeOfFirstTweet) % 60000 >= 0 && (statusTime - timeOfFirstTweet) % 60000 <= 4000 &&
                 (statusTime - lastEmitTime > 4000)) {
             result = true;
             lastEmitTime = statusTime;
