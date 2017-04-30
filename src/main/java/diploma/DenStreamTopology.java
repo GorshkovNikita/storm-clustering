@@ -43,7 +43,8 @@ public class DenStreamTopology {
     public void submit() throws InvalidTopologyException, AuthorizationException, AlreadyAliveException {
         TopologyBuilder topologyBuilder = new TopologyBuilder();
         IRichSpout spout = spoutCreator.createSpout();
-        topologyBuilder.setSpout("spout", spout, numWorkers);
+        topologyBuilder.setSpout("spout", spout, numWorkers)
+                .addConfiguration("tags", "microClustering");
 
         topologyBuilder.setBolt("statusesCreatingBolt", new StatusesCreatingBolt(), numWorkers)
                 .localOrShuffleGrouping("spout")
