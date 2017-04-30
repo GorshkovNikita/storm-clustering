@@ -28,7 +28,7 @@ public class StatusesCreatingBolt extends BaseBasicBolt {
     @Override
     public void execute(Tuple tuple, BasicOutputCollector collector) {
         String tweetJson = tuple.getStringByField("str");
-        Integer msgId = tuple.getIntegerByField("msgId");
+//        Integer msgId = tuple.getIntegerByField("msgId");
         if (tweetJson != null) {
             try {
                 Status status = TwitterObjectFactory.createStatus(tweetJson);
