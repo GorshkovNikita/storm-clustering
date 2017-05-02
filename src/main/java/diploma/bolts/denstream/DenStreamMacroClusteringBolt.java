@@ -39,6 +39,7 @@ public class DenStreamMacroClusteringBolt extends BaseBasicBolt {
     private int listsReceived = 0;
     private Dbscan dbscan;
     private Map<Integer, Integer> macroClusterIds;
+    private int minNumberOfCommonTerms;
 
     public DenStreamMacroClusteringBolt(int numWorkers) {
         this.numWorkers = numWorkers;
@@ -49,14 +50,15 @@ public class DenStreamMacroClusteringBolt extends BaseBasicBolt {
         super.prepare(stormConf, context);
         this.microClusters = new ArrayList<>();
         this.macroClusterIds = new HashMap<>();
+        this.minNumberOfCommonTerms = 6;
         this.dbscan = new Dbscan(numWorkers - 1, 0.7);
     }
 
     @Override
     public void execute(Tuple tuple, BasicOutputCollector collector) {
         for (StatusesCluster cluster : (List<StatusesCluster>) tuple.getValueByField("microClusters"))
-            microClusters.add(new SimplifiedDbscanStatusesCluster(cluster, macroClusterIds.get(
-                    cluster.getId()) == null ? 0 : macroClusterIds.get(cluster.getId())));
+            microClusters.add(new SimplifiedDbscanStatusesCluster(cluster, minNumberOfCommonTerms,
+                    macroClusterIds.get(cluster.getId()) == null ? 0 : macroClusterIds.get(cluster.getId())));
 //            microClusters.add(new SimplifiedDbscanStatusesCluster(cluster, macroClusterIds.get(cluster.getId(), tuple.getSourceTask()) == null ? 0 : macroClusterIds.get(cluster.getId(), tuple.getSourceTask())));
 //        LOG.info("task id = " + tuple.getSourceTask());
         if (++listsReceived == numWorkers) {

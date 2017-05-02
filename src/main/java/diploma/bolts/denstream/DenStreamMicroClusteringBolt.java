@@ -32,10 +32,11 @@ public class DenStreamMicroClusteringBolt extends BaseBasicBolt {
     private long lastEmitTime = 0;
     private int msgProcessedPerTimeUnit = 0;
     private int taskId;
+    private int currentTimestamp;
 
     @Override
     public void prepare(Map stormConf, TopologyContext context) {
-        denStream = new DenStream(10, 10, 5.0, 0.0000001, 0.4);
+        denStream = new DenStream(10, 10, 5.0, 0.000005, 0.4);
         this.taskId = context.getThisTaskId();
         super.prepare(stormConf, context);
     }
@@ -72,8 +73,9 @@ public class DenStreamMicroClusteringBolt extends BaseBasicBolt {
             collector.emit(new Values(microClusters));
         }
         else {
-            denStream.processNext(status);
+            currentTimestamp++;
             msgProcessedPerTimeUnit++;
+            denStream.processNext(status);
         }
     }
 
