@@ -42,7 +42,7 @@ public class DenStreamMacroClusteringWindowBolt extends BaseWindowedBolt {
         List<SimplifiedDbscanStatusesCluster> incomingPoints = new ArrayList<>();
         for (Tuple tuple : inputWindow.get()) {
             StatusesCluster cluster = ((StatusesCluster) tuple.getValue(0));
-            incomingPoints.add(new SimplifiedDbscanStatusesCluster(cluster, cluster.getMacroClusterId()));
+            incomingPoints.add(new SimplifiedDbscanStatusesCluster(cluster, 6, cluster.getMacroClusterId()));
         }
         long start = System.currentTimeMillis();
         dbscan.run(incomingPoints);

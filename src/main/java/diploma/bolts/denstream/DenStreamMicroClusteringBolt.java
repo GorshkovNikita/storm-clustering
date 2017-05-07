@@ -30,13 +30,11 @@ public class DenStreamMicroClusteringBolt extends BaseBasicBolt {
     private DenStream denStream;
     private long timeOfFirstTweet = 0;
     private long lastEmitTime = 0;
-    private int msgProcessedPerTimeUnit = 0;
     private int taskId;
-    private int currentTimestamp;
 
     @Override
     public void prepare(Map stormConf, TopologyContext context) {
-        denStream = new DenStream(10, 10, 5.0, 0.000005, 0.4);
+        denStream = new DenStream(10, 20, 10.0, 0.000001, 0.4);
         this.taskId = context.getThisTaskId();
         super.prepare(stormConf, context);
     }
@@ -44,13 +42,15 @@ public class DenStreamMicroClusteringBolt extends BaseBasicBolt {
     @Override
     public void execute(Tuple tuple, BasicOutputCollector collector) {
         EnhancedStatus status = (EnhancedStatus) tuple.getValueByField("status");
+//        msgProcessedPerTimeUnit++;
+        denStream.processNext(status);
         if (timeOfFirstTweet == 0) timeOfFirstTweet = status.getCreationDate().getTime(); // status.getStatus().getCreatedAt().getTime();
 //        if (isTickTuple(tuple)) {
-        if (checkEmitTime(status.getCreationDate().getTime())) { //status.getStatus().getCreatedAt().getTime())) {
+        if (checkEmitTime(status.getCreationDate().getTime(), 150000)) { //status.getStatus().getCreatedAt().getTime())) {
+//            LOG.info(new Date(lastEmitTime).toString());
+//            LOG.info("Messages processed = " + msgProcessedPerTimeUnit);
+//            msgProcessedPerTimeUnit = 0;
             List<StatusesCluster> microClusters = new ArrayList<>();
-            LOG.info(new Date(lastEmitTime).toString());
-            LOG.info("Messages processed = " + msgProcessedPerTimeUnit);
-            msgProcessedPerTimeUnit = 0;
             for (StatusesCluster cluster : denStream.getPotentialMicroClustering().getClusters()) {
                 // free some memory
                 if (cluster.getTfIdf().getTermFrequencyMap().size() > 1000)
@@ -69,13 +69,7 @@ public class DenStreamMicroClusteringBolt extends BaseBasicBolt {
                     cluster.getTfIdf().setTermFrequencyMap(MapUtil.putFirstEntries(1000, MapUtil.sortByValue(cluster.getTfIdf().getTermFrequencyMap())));
                 cluster.resetProcessedPerTimeUnit();
             }
-
-            collector.emit(new Values(microClusters));
-        }
-        else {
-            currentTimestamp++;
-            msgProcessedPerTimeUnit++;
-            denStream.processNext(status);
+            collector.emit(new Values(microClusters, denStream.getNumberOfProcessedUnits()));
         }
     }
 
@@ -96,11 +90,12 @@ public class DenStreamMicroClusteringBolt extends BaseBasicBolt {
      * и временем первого пришедшего твита кратна 5 минутам, то вернуть true
      * Дается 10 секундный запас, если не было твитов какое-то время (т.е максимум 10 секунд)
      * @param statusTime - время создания твита
+     * @param interval - интервел, через который необходимо выполнять макрокластеризацию
      * @return - true/false
      */
-    private boolean checkEmitTime(long statusTime) {
+    private boolean checkEmitTime(long statusTime, int interval) {
         boolean result = false;
-        if ((statusTime - timeOfFirstTweet) % 60000 >= 0 && (statusTime - timeOfFirstTweet) % 60000 <= 4000 &&
+        if ((statusTime - timeOfFirstTweet) % interval >= 0 && (statusTime - timeOfFirstTweet) % interval <= 4000 &&
                 (statusTime - lastEmitTime > 4000)) {
             result = true;
             lastEmitTime = statusTime;
@@ -110,6 +105,6 @@ public class DenStreamMicroClusteringBolt extends BaseBasicBolt {
 
     @Override
     public void declareOutputFields(OutputFieldsDeclarer ofd) {
-        ofd.declare(new Fields("microClusters"));
+        ofd.declare(new Fields("microClusters", "totalProcessedTweets"));
     }
 }

@@ -10,6 +10,7 @@ import diploma.clustering.clusters.Clustering;
 import diploma.clustering.clusters.StatusesCluster;
 import diploma.clustering.dbscan.Dbscan;
 import diploma.clustering.dbscan.points.DbscanPoint;
+import diploma.clustering.dbscan.points.DbscanStatusesCluster;
 import diploma.clustering.dbscan.points.SimplifiedDbscanStatusesCluster;
 import org.apache.commons.lang.SerializationUtils;
 import org.apache.storm.task.TopologyContext;
@@ -40,6 +41,7 @@ public class DenStreamMacroClusteringBolt extends BaseBasicBolt {
     private Dbscan dbscan;
     private Map<Integer, Integer> macroClusterIds;
     private int minNumberOfCommonTerms;
+    private int totalProcessedTweets;
 
     public DenStreamMacroClusteringBolt(int numWorkers) {
         this.numWorkers = numWorkers;
@@ -51,7 +53,8 @@ public class DenStreamMacroClusteringBolt extends BaseBasicBolt {
         this.microClusters = new ArrayList<>();
         this.macroClusterIds = new HashMap<>();
         this.minNumberOfCommonTerms = 6;
-        this.dbscan = new Dbscan(numWorkers - 1, 0.7);
+        this.dbscan = new Dbscan(numWorkers - 1, 0.6);
+        this.totalProcessedTweets = 0;
     }
 
     @Override
@@ -59,7 +62,9 @@ public class DenStreamMacroClusteringBolt extends BaseBasicBolt {
         for (StatusesCluster cluster : (List<StatusesCluster>) tuple.getValueByField("microClusters"))
             microClusters.add(new SimplifiedDbscanStatusesCluster(cluster, minNumberOfCommonTerms,
                     macroClusterIds.get(cluster.getId()) == null ? 0 : macroClusterIds.get(cluster.getId())));
-//            microClusters.add(new SimplifiedDbscanStatusesCluster(cluster, macroClusterIds.get(cluster.getId(), tuple.getSourceTask()) == null ? 0 : macroClusterIds.get(cluster.getId(), tuple.getSourceTask())));
+//            microClusters.add(new DbscanStatusesCluster(cluster,
+//                    macroClusterIds.get(cluster.getId()) == null ? 0 : macroClusterIds.get(cluster.getId())));
+        totalProcessedTweets += (Integer) tuple.getValue(1);
 //        LOG.info("task id = " + tuple.getSourceTask());
         if (++listsReceived == numWorkers) {
             dbscan.run(microClusters);
@@ -81,15 +86,16 @@ public class DenStreamMacroClusteringBolt extends BaseBasicBolt {
                     }
                 }
             }
-            collector.emit(new Values(SerializationUtils.clone((Serializable) macroClustering.getClusters())));
+            collector.emit(new Values(SerializationUtils.clone((Serializable) macroClustering.getClusters()), totalProcessedTweets));
             LOG.info("number of macro clusters = " + macroClustering.getClusters().size());
             listsReceived = 0;
+            totalProcessedTweets = 0;
             microClusters.clear();
         }
     }
 
     @Override
     public void declareOutputFields(OutputFieldsDeclarer ofd) {
-        ofd.declare(new Fields("microCluster"));
+        ofd.declare(new Fields("microCluster", "totalProcessedTweets"));
     }
 }
