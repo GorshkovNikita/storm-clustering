@@ -52,20 +52,20 @@ public class FileReaderSpout extends BaseRichSpout {
         try {
             String line = reader.readLine();
             if (line == null) {
-                deactivate();
+//                deactivate();
                 return;
             }
             collector.emit(new Values(line, ++msgId), msgId);
             numberOfEmittedMessages++;
-                Thread.sleep(5);
+//                Thread.sleep(5);
 //            } while (line != null);
         } catch (IOException e) {
             LOG.error(e.getMessage());
             e.printStackTrace();
         }
-        catch (InterruptedException e) {
-            e.printStackTrace();
-        }
+//        catch (InterruptedException e) {
+//            e.printStackTrace();
+//        }
     }
 
     @Override

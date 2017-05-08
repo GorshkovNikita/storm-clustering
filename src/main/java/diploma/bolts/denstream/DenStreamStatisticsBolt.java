@@ -15,10 +15,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.sql.Timestamp;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * @author Никита
@@ -41,8 +38,22 @@ public class DenStreamStatisticsBolt extends BaseBasicBolt {
         Timestamp time = new Timestamp(new Date().getTime());
         List<Cluster<StatusesCluster>> macroClusters = (List<Cluster<StatusesCluster>>) input.getValue(0);
         Integer totalProcessedTweets = (Integer) input.getValue(1);
-        for (Cluster<StatusesCluster> cluster: macroClusters)
-            macroClusteringStatisticsDao.saveStatistics(getClusterStatistics(cluster, time, totalProcessedTweets));
+        if (macroClusters.size() != 0)
+            for (Cluster<StatusesCluster> cluster: macroClusters)
+                macroClusteringStatisticsDao.saveStatistics(getClusterStatistics(cluster, time, totalProcessedTweets));
+        else {
+            MacroClusteringStatistics statistics = new MacroClusteringStatistics();
+            statistics.setTimestamp(time);
+            statistics.setTimeFactor(statisticsCounter);
+            statistics.setClusterId(0);
+            statistics.setNumberOfDocuments(0);
+            statistics.setTopTerms(new HashMap<>());
+            statistics.setTotalProcessedPerTimeUnit(0);
+            statistics.setAbsorbedClusterIds(new ArrayList<>());
+            statistics.setMostRelevantTweetId("0");
+            statistics.setTotalProcessedTweets(totalProcessedTweets);
+            macroClusteringStatisticsDao.saveStatistics(statistics);
+        }
         // TODO: возможно очищать после сохранения статистики absorbedClusterIds
     }
 

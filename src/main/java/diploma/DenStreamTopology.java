@@ -75,7 +75,7 @@ public class DenStreamTopology {
 
         Config conf = new Config();
         conf.setDebug(false);
-        conf.setMaxSpoutPending(40000);
+        conf.setMaxSpoutPending(50000);
         // +1 потому что numWorkers указывает на сколько воркеров параллелить микрокластеризацию,
         // но всегда еще должен быть один воркер для макрокластеризации и записи статистики
         conf.setNumWorkers(numWorkers + 1);

@@ -44,9 +44,11 @@ public class DenStreamMicroClusteringBolt extends BaseBasicBolt {
         EnhancedStatus status = (EnhancedStatus) tuple.getValueByField("status");
 //        msgProcessedPerTimeUnit++;
         denStream.processNext(status);
-        if (timeOfFirstTweet == 0) timeOfFirstTweet = status.getCreationDate().getTime(); // status.getStatus().getCreatedAt().getTime();
+        if (timeOfFirstTweet == 0) {
+            timeOfFirstTweet = status.getCreationDate().getTime(); // status.getStatus().getCreatedAt().getTime();
+        }
 //        if (isTickTuple(tuple)) {
-        if (checkEmitTime(status.getCreationDate().getTime(), 30000)) { //status.getStatus().getCreatedAt().getTime())) {
+        if (checkEmitTime(status.getCreationDate().getTime(), 120000)) { //status.getStatus().getCreatedAt().getTime())) {
 //            LOG.info(new Date(lastEmitTime).toString());
 //            LOG.info("Messages processed = " + msgProcessedPerTimeUnit);
 //            msgProcessedPerTimeUnit = 0;
