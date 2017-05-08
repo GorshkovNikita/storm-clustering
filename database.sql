@@ -51,13 +51,14 @@ DROP TABLE IF EXISTS `removedmicroclusters`;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `removedmicroclusters` (
   `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `clusterId` int(10) DEFAULT NULL,
   `isPotential` tinyint(1) unsigned DEFAULT NULL,
   `topWords` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `numberOfDocuments` int(10) unsigned DEFAULT NULL,
   `creationTime` timestamp NULL DEFAULT NULL,
   `lastUpdateTime` timestamp NULL DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=118181 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=11617 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -84,8 +85,10 @@ CREATE TABLE `statistics` (
   `absorbedClusters` varchar(255) DEFAULT NULL,
   `timeFactor` int(10) unsigned DEFAULT NULL,
   `totalProcessedPerTimeUnit` int(10) DEFAULT NULL,
+  `mostRelevantTweetId` varchar(255) DEFAULT NULL,
+  `totalProcessedTweets` int(10) DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=158329 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=22871 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -96,6 +99,30 @@ LOCK TABLES `statistics` WRITE;
 /*!40000 ALTER TABLE `statistics` DISABLE KEYS */;
 /*!40000 ALTER TABLE `statistics` ENABLE KEYS */;
 UNLOCK TABLES;
+
+--
+-- Temporary table structure for view `summary`
+--
+
+DROP TABLE IF EXISTS `summary`;
+/*!50001 DROP VIEW IF EXISTS `summary`*/;
+SET @saved_cs_client     = @@character_set_client;
+SET character_set_client = utf8;
+/*!50001 CREATE TABLE `summary` (
+  `id` tinyint NOT NULL,
+  `clusterId` tinyint NOT NULL,
+  `numberOfDocuments` tinyint NOT NULL,
+  `timestamp` tinyint NOT NULL,
+  `absorbedClusters` tinyint NOT NULL,
+  `timeFactor` tinyint NOT NULL,
+  `totalProcessedPerTimeUnit` tinyint NOT NULL,
+  `mostRelevantTweetId` tinyint NOT NULL,
+  `totalProcessedTweets` tinyint NOT NULL,
+  `statisticId` tinyint NOT NULL,
+  `term` tinyint NOT NULL,
+  `numberOfOccurrences` tinyint NOT NULL
+) ENGINE=MyISAM */;
+SET character_set_client = @saved_cs_client;
 
 --
 -- Table structure for table `termFrequencies`
@@ -132,7 +159,7 @@ DROP TABLE IF EXISTS `topterms`;
 CREATE TABLE `topterms` (
   `statisticId` int(10) unsigned NOT NULL,
   `term` varchar(255) NOT NULL,
-  `numberOfOccurences` int(10) unsigned NOT NULL,
+  `numberOfOccurrences` int(10) unsigned NOT NULL,
   KEY `fk_topterms_cluster-statistic_idx` (`statisticId`),
   CONSTRAINT `fk_topterms_statistics` FOREIGN KEY (`statisticId`) REFERENCES `statistics` (`id`) ON DELETE CASCADE ON UPDATE NO ACTION
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
@@ -214,7 +241,7 @@ CREATE TABLE `tweets` (
   `clusteredTime` timestamp NULL DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `tweetId_UNIQUE` (`tweetId`)
-) ENGINE=InnoDB AUTO_INCREMENT=29393 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -225,6 +252,25 @@ LOCK TABLES `tweets` WRITE;
 /*!40000 ALTER TABLE `tweets` DISABLE KEYS */;
 /*!40000 ALTER TABLE `tweets` ENABLE KEYS */;
 UNLOCK TABLES;
+
+--
+-- Final view structure for view `summary`
+--
+
+/*!50001 DROP TABLE IF EXISTS `summary`*/;
+/*!50001 DROP VIEW IF EXISTS `summary`*/;
+/*!50001 SET @saved_cs_client          = @@character_set_client */;
+/*!50001 SET @saved_cs_results         = @@character_set_results */;
+/*!50001 SET @saved_col_connection     = @@collation_connection */;
+/*!50001 SET character_set_client      = utf8 */;
+/*!50001 SET character_set_results     = utf8 */;
+/*!50001 SET collation_connection      = utf8_general_ci */;
+/*!50001 CREATE ALGORITHM=UNDEFINED */
+/*!50013 DEFINER=`root`@`localhost` SQL SECURITY DEFINER */
+/*!50001 VIEW `summary` AS (select `stat`.`id` AS `id`,`stat`.`clusterId` AS `clusterId`,`stat`.`numberOfDocuments` AS `numberOfDocuments`,`stat`.`timestamp` AS `timestamp`,`stat`.`absorbedClusters` AS `absorbedClusters`,`stat`.`timeFactor` AS `timeFactor`,`stat`.`totalProcessedPerTimeUnit` AS `totalProcessedPerTimeUnit`,`stat`.`mostRelevantTweetId` AS `mostRelevantTweetId`,`stat`.`totalProcessedTweets` AS `totalProcessedTweets`,`term`.`statisticId` AS `statisticId`,`term`.`term` AS `term`,`term`.`numberOfOccurrences` AS `numberOfOccurrences` from (`statistics` `stat` join `topterms` `term` on((`stat`.`id` = `term`.`statisticId`))) order by `stat`.`timestamp` desc,`stat`.`numberOfDocuments` desc,`term`.`numberOfOccurrences` desc) */;
+/*!50001 SET character_set_client      = @saved_cs_client */;
+/*!50001 SET character_set_results     = @saved_cs_results */;
+/*!50001 SET collation_connection      = @saved_col_connection */;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
 /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
@@ -235,4 +281,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2017-04-17 10:45:12
+-- Dump completed on 2017-05-08 22:26:34
