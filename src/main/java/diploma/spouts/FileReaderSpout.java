@@ -10,6 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.BufferedReader;
+import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -26,6 +27,7 @@ public class FileReaderSpout extends BaseRichSpout {
     private int msgId = 0;
     private String filePath;
     public static int numberOfEmittedMessages = 0;
+    private BufferedReader reader;
 
     public FileReaderSpout(Path filePath) {
         this.filePath = filePath.toString();
@@ -34,22 +36,34 @@ public class FileReaderSpout extends BaseRichSpout {
     @Override
     public void open(Map conf, TopologyContext context, SpoutOutputCollector collector) {
         this.collector = collector;
+        try {
+            this.reader = new BufferedReader(new FileReader(this.filePath));
+        } catch (FileNotFoundException e) {
+            this.reader = null;
+            e.printStackTrace();
+        }
     }
 
     @Override
     public void nextTuple() {
-        try (BufferedReader reader = new BufferedReader(new FileReader(this.filePath))) {
-            String line = null;
-            do {
-                line = reader.readLine();
-                collector.emit(new Values(line, ++msgId), msgId);
-                numberOfEmittedMessages++;
-                Thread.sleep(10);
-            } while (line != null);
+//        try (BufferedReader reader = new BufferedReader(new FileReader(this.filePath))) {
+//            String line = null;
+//            do {
+        try {
+            String line = reader.readLine();
+            if (line == null) {
+                deactivate();
+                return;
+            }
+            collector.emit(new Values(line, ++msgId), msgId);
+            numberOfEmittedMessages++;
+                Thread.sleep(5);
+//            } while (line != null);
         } catch (IOException e) {
             LOG.error(e.getMessage());
             e.printStackTrace();
-        } catch (InterruptedException e) {
+        }
+        catch (InterruptedException e) {
             e.printStackTrace();
         }
     }

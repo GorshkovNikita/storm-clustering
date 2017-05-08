@@ -34,7 +34,7 @@ public class DenStreamMicroClusteringBolt extends BaseBasicBolt {
 
     @Override
     public void prepare(Map stormConf, TopologyContext context) {
-        denStream = new DenStream(10, 20, 10.0, 0.000001, 0.4);
+        denStream = new DenStream(10, 20, 10.0, 0.000001, 0.2);
         this.taskId = context.getThisTaskId();
         super.prepare(stormConf, context);
     }
@@ -46,7 +46,7 @@ public class DenStreamMicroClusteringBolt extends BaseBasicBolt {
         denStream.processNext(status);
         if (timeOfFirstTweet == 0) timeOfFirstTweet = status.getCreationDate().getTime(); // status.getStatus().getCreatedAt().getTime();
 //        if (isTickTuple(tuple)) {
-        if (checkEmitTime(status.getCreationDate().getTime(), 150000)) { //status.getStatus().getCreatedAt().getTime())) {
+        if (checkEmitTime(status.getCreationDate().getTime(), 30000)) { //status.getStatus().getCreatedAt().getTime())) {
 //            LOG.info(new Date(lastEmitTime).toString());
 //            LOG.info("Messages processed = " + msgProcessedPerTimeUnit);
 //            msgProcessedPerTimeUnit = 0;
