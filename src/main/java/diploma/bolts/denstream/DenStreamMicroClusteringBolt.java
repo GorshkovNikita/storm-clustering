@@ -42,6 +42,7 @@ public class DenStreamMicroClusteringBolt extends BaseBasicBolt {
     @Override
     public void execute(Tuple tuple, BasicOutputCollector collector) {
         EnhancedStatus status = (EnhancedStatus) tuple.getValueByField("status");
+//        status.setCreationDate(new Date());
 //        msgProcessedPerTimeUnit++;
         denStream.processNext(status);
         if (timeOfFirstTweet == 0) {

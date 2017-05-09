@@ -28,6 +28,11 @@ public class FileReaderSpout extends BaseRichSpout {
     private String filePath;
     public static int numberOfEmittedMessages = 0;
     private BufferedReader reader;
+    /**
+     * Количество твитов, обрабатываемых spout в секунду
+     */
+    private double rate;
+    private long startTime;
 
     public FileReaderSpout(Path filePath) {
         this.filePath = filePath.toString();
@@ -42,6 +47,7 @@ public class FileReaderSpout extends BaseRichSpout {
             this.reader = null;
             e.printStackTrace();
         }
+        startTime = System.currentTimeMillis();
     }
 
     @Override
@@ -57,15 +63,19 @@ public class FileReaderSpout extends BaseRichSpout {
             }
             collector.emit(new Values(line, ++msgId), msgId);
             numberOfEmittedMessages++;
-//                Thread.sleep(5);
+            if (numberOfEmittedMessages % 5000 == 0) {
+                rate = 5000 / (double)(System.currentTimeMillis() - startTime) * 1000;
+                startTime = System.currentTimeMillis();
+            }
+            Thread.sleep(5);
 //            } while (line != null);
         } catch (IOException e) {
             LOG.error(e.getMessage());
             e.printStackTrace();
         }
-//        catch (InterruptedException e) {
-//            e.printStackTrace();
-//        }
+        catch (InterruptedException e) {
+            e.printStackTrace();
+        }
     }
 
     @Override

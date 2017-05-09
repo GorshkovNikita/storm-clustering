@@ -64,7 +64,7 @@ public class DenStreamMacroClusteringBolt extends BaseBasicBolt {
                     macroClusterIds.get(cluster.getId()) == null ? 0 : macroClusterIds.get(cluster.getId())));
 //            microClusters.add(new DbscanStatusesCluster(cluster,
 //                    macroClusterIds.get(cluster.getId()) == null ? 0 : macroClusterIds.get(cluster.getId())));
-        totalProcessedTweets += (Integer) tuple.getValue(1);
+        totalProcessedTweets += (Integer) tuple.getValueByField("totalProcessedTweets");
 //        LOG.info("task id = " + tuple.getSourceTask());
         if (++listsReceived == numWorkers) {
             dbscan.run(microClusters);

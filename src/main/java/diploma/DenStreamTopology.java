@@ -2,10 +2,7 @@ package diploma;
 
 import diploma.bolts.StatusesCreatingBolt;
 import diploma.bolts.StatusesFilteringBolt;
-import diploma.bolts.denstream.DenStreamMacroClusteringBolt;
-import diploma.bolts.denstream.DenStreamMacroClusteringWindowBolt;
-import diploma.bolts.denstream.DenStreamMicroClusteringBolt;
-import diploma.bolts.denstream.DenStreamStatisticsBolt;
+import diploma.bolts.denstream.*;
 import diploma.bolts.mydenstream.MyDenStreamMacroClusteringWindowBolt;
 import diploma.bolts.mydenstream.MyDenStreamMicroClusteringBolt;
 import diploma.spouts.creators.SpoutCreator;
@@ -72,6 +69,10 @@ public class DenStreamTopology {
 //                        new BaseWindowedBolt.Duration(60, TimeUnit.SECONDS))
 //                // parallelism hint ставим равным 1, чтобы все микрокластера обрабатывались в одном месте
 //                , 1).shuffleGrouping("microClusteringBolt");
+
+//        topologyBuilder.setBolt("topTermsBolt", new TopTermsBolt(), numWorkers)
+//                .localOrShuffleGrouping("statusesFilteringBolt")
+//                .addConfiguration("tags", "microClustering");
 
         Config conf = new Config();
         conf.setDebug(false);
