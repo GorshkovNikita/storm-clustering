@@ -141,6 +141,29 @@ INSERT INTO `manualclusters` VALUES (29,'123'),(30,'sada');
 UNLOCK TABLES;
 
 --
+-- Table structure for table `outlierMicroClusters`
+--
+
+DROP TABLE IF EXISTS `outlierMicroClusters`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `outlierMicroClusters` (
+  `numberOfOutlierMicroClusters` int(11) DEFAULT NULL,
+  `timestamp` timestamp NULL DEFAULT NULL,
+  `taskId` int(10) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `outlierMicroClusters`
+--
+
+LOCK TABLES `outlierMicroClusters` WRITE;
+/*!40000 ALTER TABLE `outlierMicroClusters` DISABLE KEYS */;
+/*!40000 ALTER TABLE `outlierMicroClusters` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Table structure for table `pending`
 --
 
@@ -153,7 +176,7 @@ CREATE TABLE `pending` (
   `timestamp` timestamp NULL DEFAULT NULL,
   `spout` int(10) DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=454 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=2326 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -181,7 +204,7 @@ CREATE TABLE `removedmicroclusters` (
   `creationTime` timestamp NULL DEFAULT NULL,
   `lastUpdateTime` timestamp NULL DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=152 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=2635 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -211,8 +234,11 @@ CREATE TABLE `statistics` (
   `mostRelevantTweetId` varchar(255) DEFAULT NULL,
   `totalProcessedTweets` int(10) DEFAULT NULL,
   `rate` double(10,2) DEFAULT NULL,
+  `numberOfPotentialMicroClusters` int(10) DEFAULT NULL,
+  `statisticscol` varchar(45) DEFAULT NULL,
+  `numberOfFiltered` int(10) DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=3210 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=21792 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -237,13 +263,12 @@ SET character_set_client = utf8;
   `clusterId` tinyint NOT NULL,
   `numberOfDocuments` tinyint NOT NULL,
   `timestamp` tinyint NOT NULL,
-  `absorbedClusters` tinyint NOT NULL,
   `timeFactor` tinyint NOT NULL,
   `totalProcessedPerTimeUnit` tinyint NOT NULL,
-  `mostRelevantTweetId` tinyint NOT NULL,
   `totalProcessedTweets` tinyint NOT NULL,
-  `rate` tinyint NOT NULL,
-  `statisticId` tinyint NOT NULL,
+  `numberOfPotentialMicroClusters` tinyint NOT NULL,
+  `numberOfFiltered` tinyint NOT NULL,
+  `allTweets` tinyint NOT NULL,
   `term` tinyint NOT NULL,
   `numberOfOccurrences` tinyint NOT NULL
 ) ENGINE=MyISAM */;
@@ -392,7 +417,7 @@ UNLOCK TABLES;
 /*!50001 SET collation_connection      = utf8_general_ci */;
 /*!50001 CREATE ALGORITHM=UNDEFINED */
 /*!50013 DEFINER=`root`@`localhost` SQL SECURITY DEFINER */
-/*!50001 VIEW `summary` AS (select `stat`.`id` AS `id`,`stat`.`clusterId` AS `clusterId`,`stat`.`numberOfDocuments` AS `numberOfDocuments`,`stat`.`timestamp` AS `timestamp`,`stat`.`absorbedClusters` AS `absorbedClusters`,`stat`.`timeFactor` AS `timeFactor`,`stat`.`totalProcessedPerTimeUnit` AS `totalProcessedPerTimeUnit`,`stat`.`mostRelevantTweetId` AS `mostRelevantTweetId`,`stat`.`totalProcessedTweets` AS `totalProcessedTweets`,`stat`.`rate` AS `rate`,`term`.`statisticId` AS `statisticId`,`term`.`term` AS `term`,`term`.`numberOfOccurrences` AS `numberOfOccurrences` from (`statistics` `stat` join `topterms` `term` on((`stat`.`id` = `term`.`statisticId`))) order by `stat`.`timestamp` desc,`stat`.`numberOfDocuments` desc,`term`.`numberOfOccurrences` desc) */;
+/*!50001 VIEW `summary` AS (select `stat`.`id` AS `id`,`stat`.`clusterId` AS `clusterId`,`stat`.`numberOfDocuments` AS `numberOfDocuments`,`stat`.`timestamp` AS `timestamp`,`stat`.`timeFactor` AS `timeFactor`,`stat`.`totalProcessedPerTimeUnit` AS `totalProcessedPerTimeUnit`,`stat`.`totalProcessedTweets` AS `totalProcessedTweets`,`stat`.`numberOfPotentialMicroClusters` AS `numberOfPotentialMicroClusters`,`stat`.`numberOfFiltered` AS `numberOfFiltered`,(`stat`.`numberOfFiltered` + `stat`.`totalProcessedTweets`) AS `allTweets`,`term`.`term` AS `term`,`term`.`numberOfOccurrences` AS `numberOfOccurrences` from (`statistics` `stat` join `topterms` `term` on((`stat`.`id` = `term`.`statisticId`))) order by `stat`.`timestamp` desc,`stat`.`numberOfDocuments` desc,`term`.`numberOfOccurrences` desc) */;
 /*!50001 SET character_set_client      = @saved_cs_client */;
 /*!50001 SET character_set_results     = @saved_cs_results */;
 /*!50001 SET collation_connection      = @saved_col_connection */;
@@ -406,4 +431,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2017-05-10 12:16:01
+-- Dump completed on 2017-05-11  2:15:55

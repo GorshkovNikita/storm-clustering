@@ -26,10 +26,12 @@ import java.util.Map;
  */
 public class StatusesFilteringBolt extends BaseBasicBolt {
     List<StatusesFilter> filters;
+    private int numberOfFiltered;
 
     @Override
     public void prepare(Map stormConf, TopologyContext context) {
         super.prepare(stormConf, context);
+        numberOfFiltered = 0;
         filters = Arrays.asList(new TweetLengthFilter(), new SportsBetsFilter());
     }
 
@@ -37,12 +39,16 @@ public class StatusesFilteringBolt extends BaseBasicBolt {
     public void execute(Tuple tuple, BasicOutputCollector collector) {
         EnhancedStatus status = (EnhancedStatus) tuple.getValueByField("status");
         for (StatusesFilter filter : filters)
-            if (!filter.filter(status)) return;
-        collector.emit(new Values(status));
+            if (!filter.filter(status)) {
+                numberOfFiltered++;
+                return;
+            }
+        collector.emit(new Values(status, numberOfFiltered));
+        numberOfFiltered = 0;
     }
 
     @Override
     public void declareOutputFields(OutputFieldsDeclarer ofd) {
-        ofd.declare(new Fields("status"));
+        ofd.declare(new Fields("status", "numberOfFiltered"));
     }
 }

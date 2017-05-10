@@ -2,8 +2,10 @@ package diploma.bolts.denstream;
 
 import diploma.clustering.DenStream;
 import diploma.clustering.EnhancedStatus;
+import diploma.clustering.MapDbDenStream;
 import diploma.clustering.MapUtil;
 import diploma.clustering.clusters.StatusesCluster;
+import diploma.statistics.dao.PendingDao;
 import org.apache.commons.lang.SerializationUtils;
 import org.apache.storm.Config;
 import org.apache.storm.Constants;
@@ -31,12 +33,16 @@ public class DenStreamMicroClusteringBolt extends BaseBasicBolt {
     private long timeOfFirstTweet = 0;
     private long lastEmitTime = 0;
     private int taskId;
+    private PendingDao dao;
+    private int numberOfFiltered;
 
     @Override
     public void prepare(Map stormConf, TopologyContext context) {
         denStream = new DenStream(10, 10, 10.0, 0.000001, 0.2);
         this.taskId = context.getThisTaskId();
         super.prepare(stormConf, context);
+        this.dao = new PendingDao();
+        this.numberOfFiltered = 0;
     }
 
     @Override
@@ -48,11 +54,12 @@ public class DenStreamMicroClusteringBolt extends BaseBasicBolt {
 //            LOG.info(new Date(lastEmitTime).toString());
 //            LOG.info("Messages processed = " + msgProcessedPerTimeUnit);
 //            msgProcessedPerTimeUnit = 0;
+            long start = System.nanoTime();
             List<StatusesCluster> microClusters = new ArrayList<>();
             for (StatusesCluster cluster : denStream.getPotentialMicroClustering().getClusters()) {
                 // free some memory
-                if (cluster.getTfIdf().getTermFrequencyMap().size() > 1000)
-                    cluster.getTfIdf().setTermFrequencyMap(MapUtil.putFirstEntries(1000, MapUtil.sortByValue(cluster.getTfIdf().getTermFrequencyMap())));
+                if (cluster.getTfIdf().getTermFrequencyMap().size() > 100)
+                    cluster.getTfIdf().setTermFrequencyMap(MapUtil.putFirstEntries(75, MapUtil.sortByValue(cluster.getTfIdf().getTermFrequencyMap())));
                 StatusesCluster clusterCopy = (StatusesCluster) SerializationUtils.clone(cluster);
                 clusterCopy.getTfIdf().setTermFrequencyMap(
                         MapUtil.putFirstEntries(20, MapUtil.sortByValue(clusterCopy.getTfIdf().getTermFrequencyMap())));
@@ -63,15 +70,21 @@ public class DenStreamMicroClusteringBolt extends BaseBasicBolt {
             }
 
             for (StatusesCluster cluster : denStream.getOutlierMicroClustering().getClusters()) {
-                if (cluster.getTfIdf().getTermFrequencyMap().size() > 1000)
-                    cluster.getTfIdf().setTermFrequencyMap(MapUtil.putFirstEntries(1000, MapUtil.sortByValue(cluster.getTfIdf().getTermFrequencyMap())));
+                if (cluster.getTfIdf().getTermFrequencyMap().size() > 100)
+                    cluster.getTfIdf().setTermFrequencyMap(MapUtil.putFirstEntries(75, MapUtil.sortByValue(cluster.getTfIdf().getTermFrequencyMap())));
                 cluster.resetProcessedPerTimeUnit();
             }
-            collector.emit(new Values(microClusters, denStream.getNumberOfProcessedUnits()));
+            collector.emit(new Values(microClusters, denStream.getNumberOfProcessedUnits(), numberOfFiltered)); // TODO: tick tuple, поэтому sourceTas = -1
+            this.dao.saveNumberOfOutlierMicroClusters(denStream.getOutlierMicroClustering().getClusters().size(), tuple.getSourceTask());
+            System.out.println("sorting and everything completed in" + (System.nanoTime() - start));
         }
         else {
             EnhancedStatus status = (EnhancedStatus) tuple.getValueByField("status");
+//            long startTime = System.nanoTime();
+            numberOfFiltered += (Integer) tuple.getValueByField("numberOfFiltered");
             denStream.processNext(status);
+//            long endTime = System.nanoTime() - startTime;
+//            System.out.println("status processed in " + endTime);
             if (timeOfFirstTweet == 0) {
                 timeOfFirstTweet = status.getCreationDate().getTime(); // status.getStatus().getCreatedAt().getTime();
             }
@@ -110,6 +123,6 @@ public class DenStreamMicroClusteringBolt extends BaseBasicBolt {
 
     @Override
     public void declareOutputFields(OutputFieldsDeclarer ofd) {
-        ofd.declare(new Fields("microClusters", "totalProcessedTweets"));
+        ofd.declare(new Fields("microClusters", "totalProcessedTweets", "numberOfFiltered"));
     }
 }
