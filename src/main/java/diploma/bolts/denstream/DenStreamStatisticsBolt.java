@@ -38,9 +38,10 @@ public class DenStreamStatisticsBolt extends BaseBasicBolt {
         Timestamp time = new Timestamp(new Date().getTime());
         List<Cluster<StatusesCluster>> macroClusters = (List<Cluster<StatusesCluster>>) input.getValue(0);
         Integer totalProcessedTweets = (Integer) input.getValue(1);
+        double rate = (double) input.getValue(2);
         if (macroClusters.size() != 0)
             for (Cluster<StatusesCluster> cluster: macroClusters)
-                macroClusteringStatisticsDao.saveStatistics(getClusterStatistics(cluster, time, totalProcessedTweets));
+                macroClusteringStatisticsDao.saveStatistics(getClusterStatistics(cluster, time, totalProcessedTweets, rate));
         else {
             MacroClusteringStatistics statistics = new MacroClusteringStatistics();
             statistics.setTimestamp(time);
@@ -65,7 +66,7 @@ public class DenStreamStatisticsBolt extends BaseBasicBolt {
      * @param cluster - кластер
      * @return статистика кластера
      */
-    private MacroClusteringStatistics getClusterStatistics(Cluster<StatusesCluster> cluster, Timestamp time, Integer totalProcessedTweets) {
+    private MacroClusteringStatistics getClusterStatistics(Cluster<StatusesCluster> cluster, Timestamp time, Integer totalProcessedTweets, double rate) {
         MacroClusteringStatistics statistics = new MacroClusteringStatistics();
         int totalNumberOfDocuments = 0;
         int totalProcessedPerTimeUnit = 0;
@@ -86,6 +87,7 @@ public class DenStreamStatisticsBolt extends BaseBasicBolt {
         statistics.setAbsorbedClusterIds(cluster.getAbsorbedClusterIds());
         statistics.setMostRelevantTweetId(Long.toString(cluster.getAssignedPoints().get(0).getMostRelevantTweet().getStatus().getId()));
         statistics.setTotalProcessedTweets(totalProcessedTweets);
+        statistics.setRate(rate);
         return statistics;
     }
 }

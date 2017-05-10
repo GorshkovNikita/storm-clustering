@@ -34,22 +34,17 @@ public class DenStreamMicroClusteringBolt extends BaseBasicBolt {
 
     @Override
     public void prepare(Map stormConf, TopologyContext context) {
-        denStream = new DenStream(10, 20, 10.0, 0.000001, 0.2);
+        denStream = new DenStream(10, 10, 10.0, 0.000001, 0.2);
         this.taskId = context.getThisTaskId();
         super.prepare(stormConf, context);
     }
 
     @Override
     public void execute(Tuple tuple, BasicOutputCollector collector) {
-        EnhancedStatus status = (EnhancedStatus) tuple.getValueByField("status");
 //        status.setCreationDate(new Date());
 //        msgProcessedPerTimeUnit++;
-        denStream.processNext(status);
-        if (timeOfFirstTweet == 0) {
-            timeOfFirstTweet = status.getCreationDate().getTime(); // status.getStatus().getCreatedAt().getTime();
-        }
-//        if (isTickTuple(tuple)) {
-        if (checkEmitTime(status.getCreationDate().getTime(), 120000)) { //status.getStatus().getCreatedAt().getTime())) {
+        if (isTickTuple(tuple)) {
+//        if (checkEmitTime(status.getCreationDate().getTime(), 120000)) { //status.getStatus().getCreatedAt().getTime())) {
 //            LOG.info(new Date(lastEmitTime).toString());
 //            LOG.info("Messages processed = " + msgProcessedPerTimeUnit);
 //            msgProcessedPerTimeUnit = 0;
@@ -74,12 +69,19 @@ public class DenStreamMicroClusteringBolt extends BaseBasicBolt {
             }
             collector.emit(new Values(microClusters, denStream.getNumberOfProcessedUnits()));
         }
+        else {
+            EnhancedStatus status = (EnhancedStatus) tuple.getValueByField("status");
+            denStream.processNext(status);
+            if (timeOfFirstTweet == 0) {
+                timeOfFirstTweet = status.getCreationDate().getTime(); // status.getStatus().getCreatedAt().getTime();
+            }
+        }
     }
 
     @Override
     public Map<String, Object> getComponentConfiguration() {
         Config conf = new Config();
-//        conf.put(Config.TOPOLOGY_TICK_TUPLE_FREQ_SECS, 60);
+        conf.put(Config.TOPOLOGY_TICK_TUPLE_FREQ_SECS, 30);
         return conf;
     }
 

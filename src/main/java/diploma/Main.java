@@ -39,9 +39,10 @@ public class Main {
                     spoutCreator = new PointsSpoutCreator();
                 }
                 else {
-                    // параметры: local D:\MSU\diploma\tweets-sets\full-random.txt
+                    // параметры: local 1 D:\MSU\diploma\tweets-sets\full-random.txt
                     Path filePath = Paths.get(args[2]);
-                    spoutCreator = new FileReaderSpoutCreator(filePath);
+//                    spoutCreator = new FileReaderSpoutCreator(filePath);
+                    spoutCreator = new KafkaSpoutCreator();
                 }
                 break;
             case CLUSTER:

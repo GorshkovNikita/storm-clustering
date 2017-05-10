@@ -1,6 +1,7 @@
 package diploma.spouts.creators;
 
 import diploma.config.ClusterConfig;
+import diploma.spouts.MyKafkaSpout;
 import org.apache.storm.kafka.*;
 import org.apache.storm.spout.SchemeAsMultiScheme;
 import org.apache.storm.topology.IRichSpout;
@@ -21,6 +22,6 @@ public class KafkaSpoutCreator extends SpoutCreator {
         spoutConfig.ignoreZkOffsets = true;
         // Указываем десериализатор
         spoutConfig.scheme = new SchemeAsMultiScheme(new StringScheme());
-        return new KafkaSpout(spoutConfig);
+        return new MyKafkaSpout(spoutConfig);
     }
 }

@@ -12,6 +12,7 @@ import diploma.clustering.dbscan.Dbscan;
 import diploma.clustering.dbscan.points.DbscanPoint;
 import diploma.clustering.dbscan.points.DbscanStatusesCluster;
 import diploma.clustering.dbscan.points.SimplifiedDbscanStatusesCluster;
+import diploma.statistics.dao.MacroClusteringTaskDao;
 import org.apache.commons.lang.SerializationUtils;
 import org.apache.storm.task.TopologyContext;
 import org.apache.storm.topology.BasicOutputCollector;
@@ -42,6 +43,11 @@ public class DenStreamMacroClusteringBolt extends BaseBasicBolt {
     private Map<Integer, Integer> macroClusterIds;
     private int minNumberOfCommonTerms;
     private int totalProcessedTweets;
+    private int totalProcessedTweetsBefore;
+    private long lastTime;
+    private double rate;
+    private int previousTaskId;
+    private MacroClusteringTaskDao dao;
 
     public DenStreamMacroClusteringBolt(int numWorkers) {
         this.numWorkers = numWorkers;
@@ -55,6 +61,8 @@ public class DenStreamMacroClusteringBolt extends BaseBasicBolt {
         this.minNumberOfCommonTerms = 4;
         this.dbscan = new Dbscan(numWorkers - 1, 0.6);
         this.totalProcessedTweets = 0;
+        this.previousTaskId = 0;
+        this.dao = new MacroClusteringTaskDao();
     }
 
     @Override
@@ -64,7 +72,9 @@ public class DenStreamMacroClusteringBolt extends BaseBasicBolt {
                     macroClusterIds.get(cluster.getId()) == null ? 0 : macroClusterIds.get(cluster.getId())));
 //            microClusters.add(new DbscanStatusesCluster(cluster,
 //                    macroClusterIds.get(cluster.getId()) == null ? 0 : macroClusterIds.get(cluster.getId())));
-        totalProcessedTweets += (Integer) tuple.getValueByField("totalProcessedTweets");
+        int numberOfTuples = (Integer) tuple.getValueByField("totalProcessedTweets");
+        totalProcessedTweets += numberOfTuples;
+        dao.saveMacroClusteringTaskId(tuple.getSourceTask(), numberOfTuples);
 //        LOG.info("task id = " + tuple.getSourceTask());
         if (++listsReceived == numWorkers) {
             dbscan.run(microClusters);
@@ -86,16 +96,20 @@ public class DenStreamMacroClusteringBolt extends BaseBasicBolt {
                     }
                 }
             }
-            collector.emit(new Values(SerializationUtils.clone((Serializable) macroClustering.getClusters()), totalProcessedTweets));
+            rate = (totalProcessedTweets - totalProcessedTweetsBefore) / (double) (System.currentTimeMillis() - lastTime) * 1000;
+            lastTime = System.currentTimeMillis();
+            totalProcessedTweetsBefore = totalProcessedTweets;
+            collector.emit(new Values(SerializationUtils.clone((Serializable) macroClustering.getClusters()), totalProcessedTweets, rate));
             LOG.info("number of macro clusters = " + macroClustering.getClusters().size());
             listsReceived = 0;
             totalProcessedTweets = 0;
             microClusters.clear();
+            previousTaskId = 0;
         }
     }
 
     @Override
     public void declareOutputFields(OutputFieldsDeclarer ofd) {
-        ofd.declare(new Fields("microCluster", "totalProcessedTweets"));
+        ofd.declare(new Fields("microCluster", "totalProcessedTweets", "rate"));
     }
 }
