@@ -41,7 +41,7 @@ public class MyKafkaSpout extends KafkaSpout {
         super.nextTuple();
         if (++numberOfNextTupleInvoсations % 20000 == 0) {
             LOG.info("pending tuples = " + collector.getPendingCount());
-            dao.savePending(collector.getPendingCount(), spout);
+//            dao.savePending(collector.getPendingCount(), spout);
         }
     }
 }
