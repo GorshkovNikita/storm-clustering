@@ -1,5 +1,8 @@
-package diploma.clustering;
+package diploma;
 
+import diploma.clustering.DenStream;
+import diploma.clustering.EnhancedStatus;
+import diploma.clustering.MapUtil;
 import diploma.clustering.clusters.Cluster;
 import diploma.clustering.clusters.Clustering;
 import diploma.clustering.clusters.StatusesCluster;
@@ -92,7 +95,8 @@ public class PlainDenStream {
                     PlainDenStream.this.macroClusteringStatisticsDao.saveStatistics(PlainDenStream.this.denStream.getClusterStatistics(cluster, time,
                             PlainDenStream.this.numberOfDocuments - PlainDenStream.this.numberOfDocumentsIgnored,
                             PlainDenStream.this.numberOfDocuments / (double) totalTime * 1000,
-                            PlainDenStream.this.denStream.getPotentialMicroClustering().getClusters().size()));
+                            PlainDenStream.this.denStream.getPotentialMicroClustering().getClusters().size(),
+                            numberOfDocumentsIgnored));
 
                 for (StatusesCluster cluster : denStream.getPotentialMicroClustering().getClusters())
                     cluster.resetProcessedPerTimeUnit();
