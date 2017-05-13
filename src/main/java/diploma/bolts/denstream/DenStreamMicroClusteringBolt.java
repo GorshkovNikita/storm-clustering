@@ -38,7 +38,7 @@ public class DenStreamMicroClusteringBolt extends BaseBasicBolt {
 
     @Override
     public void prepare(Map stormConf, TopologyContext context) {
-        denStream = new DenStream(10, 10, 10.0, 0.000001, 0.2);
+        denStream = new DenStream(10, 5, 10.0, 0.000001, 0.2);
         this.taskId = context.getThisTaskId();
         super.prepare(stormConf, context);
         this.dao = new PendingDao();
