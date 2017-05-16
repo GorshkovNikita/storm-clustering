@@ -33,7 +33,7 @@ import java.util.*;
 public class DenStreamMacroClusteringBolt extends BaseBasicBolt {
     private static final Logger LOG = LoggerFactory.getLogger(DenStreamMacroClusteringBolt.class);
     private int numWorkers;
-    private List<SimplifiedDbscanStatusesCluster> microClusters;
+    private List<DbscanStatusesCluster> microClusters;
     /**
      * Переменная, равная количеству инстансов, на которые распараллелены микрокластера.
      * Нужна для того, чтобы понять, когда можно проводить макрокластеризацию
@@ -73,7 +73,7 @@ public class DenStreamMacroClusteringBolt extends BaseBasicBolt {
     public void execute(Tuple tuple, BasicOutputCollector collector) {
         List<StatusesCluster> newMicroClusters = (List<StatusesCluster>) tuple.getValueByField("microClusters");
         for (StatusesCluster cluster : newMicroClusters)
-            microClusters.add(new SimplifiedDbscanStatusesCluster(cluster, minNumberOfCommonTerms,
+            microClusters.add(new DbscanStatusesCluster(cluster,
                     macroClusterIds.get(cluster.getId()) == null ? 0 : macroClusterIds.get(cluster.getId())));
 //            microClusters.add(new DbscanStatusesCluster(cluster,
 //                    macroClusterIds.get(cluster.getId()) == null ? 0 : macroClusterIds.get(cluster.getId())));
@@ -87,7 +87,7 @@ public class DenStreamMacroClusteringBolt extends BaseBasicBolt {
         if (++listsReceived == numWorkers) {
             dbscan.run(microClusters);
             Clustering<Cluster<StatusesCluster>, StatusesCluster> macroClustering = new Clustering<>();
-            for (SimplifiedDbscanStatusesCluster point: microClusters) {
+            for (DbscanStatusesCluster point: microClusters) {
                 // поле clusterId от point записывается в dbscan.run()
                 if (!point.isNoise()) {
                     Cluster<StatusesCluster> clusterById = macroClustering.findClusterById(point.getClusterId());
