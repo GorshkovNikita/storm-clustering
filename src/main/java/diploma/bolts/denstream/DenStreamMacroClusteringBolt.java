@@ -90,7 +90,7 @@ public class DenStreamMacroClusteringBolt extends BaseBasicBolt {
             Collections.sort(microClusters, new Comparator<DbscanStatusesCluster>() {
                 @Override
                 public int compare(final DbscanStatusesCluster object1, final DbscanStatusesCluster object2) {
-                    return ((Integer)object2.getLastAssignedClusterId()).compareTo(object1.getLastAssignedClusterId());
+                    return ((Integer)object1.getStatusesCluster().getId()).compareTo(object2.getStatusesCluster().getId());
                 }
             });
             dbscan.run(microClusters);

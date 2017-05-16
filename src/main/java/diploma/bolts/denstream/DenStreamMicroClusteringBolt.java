@@ -74,7 +74,7 @@ public class DenStreamMicroClusteringBolt extends BaseBasicBolt {
                     cluster.getTfIdf().setTermFrequencyMap(MapUtil.putFirstEntries(75, MapUtil.sortByValue(cluster.getTfIdf().getTermFrequencyMap())));
                 cluster.resetProcessedPerTimeUnit();
             }
-            collector.emit(new Values(microClusters, denStream.getNumberOfProcessedUnits(), numberOfFiltered)); // TODO: tick tuple, поэтому sourceTas = -1
+            collector.emit(new Values(microClusters, denStream.getNumberOfProcessedUnits(), numberOfFiltered)); // TODO: tick tuple, поэтому sourceTask = -1
 //            this.dao.saveNumberOfOutlierMicroClusters(denStream.getOutlierMicroClustering().getClusters().size(), tuple.getSourceTask());
             System.out.println("sorting and everything completed in" + (System.nanoTime() - start));
         }
