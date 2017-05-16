@@ -61,7 +61,8 @@ public class DenStreamMacroClusteringBolt extends BaseBasicBolt {
         this.microClusters = new ArrayList<>();
         this.macroClusterIds = new HashMap<>();
         this.minNumberOfCommonTerms = 6;
-        this.dbscan = new Dbscan(numWorkers - 1, 0.6);
+//        this.dbscan = new Dbscan(numWorkers - 1, 0.6);
+        this.dbscan = new Dbscan(0, 0.6);
         this.totalProcessedTweets = 0;
         this.previousTaskId = 0;
         this.dao = new MacroClusteringTaskDao();

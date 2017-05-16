@@ -42,8 +42,11 @@ public class DenStreamStatisticsBolt extends BaseBasicBolt {
         Integer numberOfPotentialMicroClusters = (Integer) input.getValue(3);
         Integer totalNumberOfFiltered = (Integer) input.getValueByField("totalNumberOfFiltered");
         if (macroClusters.size() != 0)
-            for (Cluster<StatusesCluster> cluster: macroClusters)
-                macroClusteringStatisticsDao.saveStatistics(getClusterStatistics(cluster, time, totalProcessedTweets, rate, numberOfPotentialMicroClusters, totalNumberOfFiltered));
+            for (Cluster<StatusesCluster> cluster: macroClusters) {
+                MacroClusteringStatistics statistics = getClusterStatistics(cluster, time, totalProcessedTweets, rate, numberOfPotentialMicroClusters, totalNumberOfFiltered);
+                if (statistics.getNumberOfDocuments() > 200)
+                    macroClusteringStatisticsDao.saveStatistics(statistics);
+            }
         else {
             MacroClusteringStatistics statistics = new MacroClusteringStatistics();
             statistics.setTimestamp(time);
