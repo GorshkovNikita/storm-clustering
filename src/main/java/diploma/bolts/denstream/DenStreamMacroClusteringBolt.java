@@ -87,13 +87,13 @@ public class DenStreamMacroClusteringBolt extends BaseBasicBolt {
         numberOfMicroClusters += newMicroClusters.size();
 //        LOG.info("task id = " + tuple.getSourceTask());
         if (++listsReceived == numWorkers) {
-            dbscan.run(microClusters);
             Collections.sort(microClusters, new Comparator<DbscanStatusesCluster>() {
                 @Override
                 public int compare(final DbscanStatusesCluster object1, final DbscanStatusesCluster object2) {
                     return ((Integer)object2.getLastAssignedClusterId()).compareTo(object1.getLastAssignedClusterId());
                 }
             });
+            dbscan.run(microClusters);
             Clustering<Cluster<StatusesCluster>, StatusesCluster> macroClustering = new Clustering<>();
             for (DbscanStatusesCluster point: microClusters) {
                 // поле clusterId от point записывается в dbscan.run()
