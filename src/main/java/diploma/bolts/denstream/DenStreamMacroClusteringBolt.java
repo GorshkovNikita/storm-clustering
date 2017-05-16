@@ -26,6 +26,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.Serializable;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * @author Никита
@@ -87,6 +88,12 @@ public class DenStreamMacroClusteringBolt extends BaseBasicBolt {
 //        LOG.info("task id = " + tuple.getSourceTask());
         if (++listsReceived == numWorkers) {
             dbscan.run(microClusters);
+            Collections.sort(microClusters, new Comparator<DbscanStatusesCluster>() {
+                @Override
+                public int compare(final DbscanStatusesCluster object1, final DbscanStatusesCluster object2) {
+                    return ((Integer)object2.getLastAssignedClusterId()).compareTo(object1.getLastAssignedClusterId());
+                }
+            });
             Clustering<Cluster<StatusesCluster>, StatusesCluster> macroClustering = new Clustering<>();
             for (DbscanStatusesCluster point: microClusters) {
                 // поле clusterId от point записывается в dbscan.run()
@@ -123,4 +130,22 @@ public class DenStreamMacroClusteringBolt extends BaseBasicBolt {
     public void declareOutputFields(OutputFieldsDeclarer ofd) {
         ofd.declare(new Fields("microCluster", "totalProcessedTweets", "rate", "numberOfMicroClusters", "totalNumberOfFiltered"));
     }
+
+    public static void main(String[] args) {
+        List<Integer> list = new ArrayList<>();
+        list.add(2);
+        list.add(1);
+        list.add(0);
+        list.add(3);
+//        list = list.stream().sorted((obj1, obj2) -> obj2.compareTo(obj1)).collect(Collectors.toList());
+        System.out.println(list);
+        Collections.sort(list, new Comparator<Integer>() {
+            @Override
+            public int compare(final Integer object1, final Integer object2) {
+                return object2.compareTo(object1);
+            }
+        });
+        System.out.println(list);
+    }
 }
+
