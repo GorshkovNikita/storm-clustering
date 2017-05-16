@@ -34,7 +34,7 @@ import java.util.stream.Collectors;
 public class DenStreamMacroClusteringBolt extends BaseBasicBolt {
     private static final Logger LOG = LoggerFactory.getLogger(DenStreamMacroClusteringBolt.class);
     private int numWorkers;
-    private List<DbscanStatusesCluster> microClusters;
+    private List<SimplifiedDbscanStatusesCluster> microClusters;
     /**
      * Переменная, равная количеству инстансов, на которые распараллелены микрокластера.
      * Нужна для того, чтобы понять, когда можно проводить макрокластеризацию
@@ -75,7 +75,7 @@ public class DenStreamMacroClusteringBolt extends BaseBasicBolt {
     public void execute(Tuple tuple, BasicOutputCollector collector) {
         List<StatusesCluster> newMicroClusters = (List<StatusesCluster>) tuple.getValueByField("microClusters");
         for (StatusesCluster cluster : newMicroClusters)
-            microClusters.add(new DbscanStatusesCluster(cluster,
+            microClusters.add(new SimplifiedDbscanStatusesCluster(cluster, minNumberOfCommonTerms,
                     macroClusterIds.get(cluster.getId()) == null ? 0 : macroClusterIds.get(cluster.getId())));
 //            microClusters.add(new DbscanStatusesCluster(cluster,
 //                    macroClusterIds.get(cluster.getId()) == null ? 0 : macroClusterIds.get(cluster.getId())));
@@ -87,15 +87,15 @@ public class DenStreamMacroClusteringBolt extends BaseBasicBolt {
         numberOfMicroClusters += newMicroClusters.size();
 //        LOG.info("task id = " + tuple.getSourceTask());
         if (++listsReceived == numWorkers) {
-            Collections.sort(microClusters, new Comparator<DbscanStatusesCluster>() {
-                @Override
-                public int compare(final DbscanStatusesCluster object1, final DbscanStatusesCluster object2) {
-                    return ((Integer)object1.getStatusesCluster().getId()).compareTo(object2.getStatusesCluster().getId());
-                }
-            });
+//            Collections.sort(microClusters, new Comparator<DbscanStatusesCluster>() {
+//                @Override
+//                public int compare(final DbscanStatusesCluster object1, final DbscanStatusesCluster object2) {
+//                    return ((Integer)object1.getStatusesCluster().getId()).compareTo(object2.getStatusesCluster().getId());
+//                }
+//            });
             dbscan.run(microClusters);
             Clustering<Cluster<StatusesCluster>, StatusesCluster> macroClustering = new Clustering<>();
-            for (DbscanStatusesCluster point: microClusters) {
+            for (SimplifiedDbscanStatusesCluster point: microClusters) {
                 // поле clusterId от point записывается в dbscan.run()
                 if (!point.isNoise()) {
                     Cluster<StatusesCluster> clusterById = macroClustering.findClusterById(point.getClusterId());
